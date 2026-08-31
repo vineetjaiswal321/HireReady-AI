@@ -18,6 +18,7 @@ export async function register({username, email, password}) {
         
     } catch (error) {
         console.log(error)
+        throw error
     }
 }
 
@@ -30,26 +31,34 @@ export async function login({email, password}) {
         return response.data;
     } catch (error) {
         console.log(error)
+        throw error
     }
 }
 
 
 export async function logout() {
     try {
-        const response=await axios.get("/api/auth/logout")
+        const response=await api.post("/api/auth/logout")
 
         return response.data;
     } catch (error) {
         console.log(error)
+        throw error
     }
 }
 
 export async function getMe() {
     try {
-        const response=await axios.get("/api/auth/get-me")
-
+        const response = await api.get("/api/auth/get-me");
         return response.data;
     } catch (error) {
-        console.log(error)
+
+        // 401 simply means user is not logged in
+        if (error.response?.status === 401) {
+            return null;
+        }
+
+        console.error("Get Me Error:", error);
+        throw error;
     }
 }

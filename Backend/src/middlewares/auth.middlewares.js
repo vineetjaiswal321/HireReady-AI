@@ -8,7 +8,7 @@ const authUser = asyncHandler(async (req, res, next)=>{
     const token=req.cookies.token;
 
     if(!token){
-        throw new ApiError(400, "Unauthorized Request")
+        throw new ApiError(401, "Unauthorized Request")
     }
 
     const isTokenBlackListed=await TokenBlackListModel.findOne({token})
@@ -23,7 +23,7 @@ const authUser = asyncHandler(async (req, res, next)=>{
         req.user=decoded;
         next();
     } catch (error) {
-         return new ApiError(400, "Unathorized Request");
+        throw new ApiError(400, "Unathorized Request");
     }
 
 })

@@ -10,7 +10,7 @@ authRouter.post("/register", registerUserController)
 authRouter.post("/login", loginUserController)
 
 
-authRouter.get("/logout", logoutUser)
+authRouter.post("/logout", logoutUser)
 
 
 authRouter.get("/get-me", authUser, getMe)

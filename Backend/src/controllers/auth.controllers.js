@@ -95,7 +95,7 @@ const logoutUser=asyncHandler(async (req, res)=>{
 })
 
 const getMe=asyncHandler(async (req, res)=>{
-    const user=await User.findById(req.user._id).select("-password");
+    const user=await User.findById(req.user.id).select("-password");
 
     return res.status(200).json(new ApiResponse(200, user, "User detail fetched successfully"))
 })

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
 
@@ -12,11 +12,24 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit =async  (e) => {
-    e.preventDefault();
-    await handleLogin({email, password})
-    navigate('/')
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      try {
+          const success = await handleLogin({ email, password });
+
+          if (success) {
+              navigate("/");
+          }
+      } catch (error) {
+          console.log(error);
+          setError(
+              error.response?.data?.message ||
+              "Invalid email or password"
+          );
+      }
   };
   if(loading){
     return (<main><h1>Signing in......</h1></main>)
@@ -305,7 +318,11 @@ function Login() {
                   </button>
 
                 </div>
-
+                  {error && (
+                    <p className="mt-2 text-sm text-red-400">
+                        {error}
+                    </p>
+                )}
               </div>
 
               {/* Remember */}
