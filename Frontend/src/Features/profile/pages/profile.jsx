@@ -45,11 +45,11 @@ const Profile = () => {
 
                     <div>
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={() => navigate("/")}
                             className="text-sm text-gray-500 hover:text-gray-300
                                 transition mb-3"
                         >
-                            ← Back
+                            ← Back to Home
                         </button>
 
                         <h1 className="text-3xl md:text-4xl font-bold tracking-tight">

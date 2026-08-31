@@ -84,11 +84,28 @@ const UpdateProfile = () => {
                 databases: user.skills?.databases || [],
                 tools: user.skills?.tools || [],
             },
-
-            education: user.education || [],
-            experience: user.experience || [],
-            projects: user.projects || [],
-            achievements: user.achievements || [],
+            education: (user.education || []).map(
+                (education, index) => ({
+                    ...education,
+                    order: education.order || index + 1,
+                })
+            ),
+            experience: (user.experience || []).map(
+                (experience, index) => ({
+                    ...experience,
+                    order: experience.order || index + 1,
+                })
+            ),
+            projects: (user.projects || []).map((project, index) => ({
+                ...project,
+                order: project.order || index + 1,
+            })),
+            achievements: (user.achievements || []).map(
+                (achievement, index) => ({
+                    ...achievement,
+                    order: achievement.order || index + 1,
+                })
+            ),
         });
     }, [user]);
 
@@ -226,24 +243,36 @@ const UpdateProfile = () => {
      * Education
      */
     const addEducation = () => {
+        setProfile((prev) => {
 
-        setProfile((prev) => ({
-            ...prev,
+            const maxOrder = prev.education.reduce(
+                (max, education) =>
+                    Math.max(max, education.order || 0),
+                0
+            );
 
-            education: [
-                ...prev.education,
+            const newEducation = {
+                id: crypto.randomUUID(),
+                order: maxOrder + 1,
 
-                {
-                    institution: "",
-                    degree: "",
-                    field: "",
-                    startYear: "",
-                    endYear: "",
-                    grade: "",
-                },
-            ],
-        }));
+                institution: "",
+                degree: "",
+                field: "",
+                startYear: "",
+                endYear: "",
+                grade: "",
+            };
 
+            return {
+                ...prev,
+
+                // New education appears at the top
+                education: [
+                    newEducation,
+                    ...prev.education,
+                ],
+            };
+        });
     };
 
 
@@ -285,24 +314,36 @@ const UpdateProfile = () => {
      * Experience
      */
     const addExperience = () => {
+        setProfile((prev) => {
 
-        setProfile((prev) => ({
-            ...prev,
+            const maxOrder = prev.experience.reduce(
+                (max, experience) =>
+                    Math.max(max, experience.order || 0),
+                0
+            );
 
-            experience: [
-                ...prev.experience,
+            const newExperience = {
+                id: crypto.randomUUID(),
+                order: maxOrder + 1,
 
-                {
-                    company: "",
-                    role: "",
-                    startDate: "",
-                    endDate: "",
-                    currentlyWorking: false,
-                    description: "",
-                },
-            ],
-        }));
+                company: "",
+                role: "",
+                startDate: "",
+                endDate: "",
+                currentlyWorking: false,
+                description: "",
+            };
 
+            return {
+                ...prev,
+
+                // New experience appears at the top
+                experience: [
+                    newExperience,
+                    ...prev.experience,
+                ],
+            };
+        });
     };
 
 
@@ -344,26 +385,36 @@ const UpdateProfile = () => {
      * Projects
      */
     const addProject = () => {
+        setProfile((prev) => {
 
-        setProfile((prev) => ({
-            ...prev,
+            const maxOrder = prev.projects.reduce(
+                (max, project) => Math.max(max, project.order || 0),
+                0
+            );
 
-            projects: [
-                ...prev.projects,
+            const newProject = {
+                id: crypto.randomUUID(),
+                order: maxOrder + 1,
 
-                {
-                    name: "",
-                    description: "",
-                    technologies: [],
-                    githubUrl: "",
-                    liveUrl: "",
-                    role: "",
-                },
-            ],
-        }));
+                name: "",
+                description: "",
+                technologies: [],
+                githubUrl: "",
+                liveUrl: "",
+                role: "",
+            };
 
+            return {
+                ...prev,
+
+                // New project appears at TOP
+                projects: [
+                    newProject,
+                    ...prev.projects,
+                ],
+            };
+        });
     };
-
 
     const updateProject = (index, field, value) => {
 
@@ -403,21 +454,33 @@ const UpdateProfile = () => {
      * Achievements
      */
     const addAchievement = () => {
+        setProfile((prev) => {
 
-        setProfile((prev) => ({
-            ...prev,
+            const maxOrder = prev.achievements.reduce(
+                (max, achievement) =>
+                    Math.max(max, achievement.order || 0),
+                0
+            );
 
-            achievements: [
-                ...prev.achievements,
+            const newAchievement = {
+                id: crypto.randomUUID(),
+                order: maxOrder + 1,
 
-                {
-                    title: "",
-                    description: "",
-                    date: "",
-                },
-            ],
-        }));
+                title: "",
+                description: "",
+                date: "",
+            };
 
+            return {
+                ...prev,
+
+                // New achievement appears at the top
+                achievements: [
+                    newAchievement,
+                    ...prev.achievements,
+                ],
+            };
+        });
     };
 
 
@@ -1000,7 +1063,7 @@ const UpdateProfile = () => {
                                                 <div className="flex justify-between mb-5">
 
                                                     <h3 className="font-medium">
-                                                        Education {index + 1}
+                                                        Education {edu.order}
                                                     </h3>
 
                                                     <button
@@ -1150,7 +1213,7 @@ const UpdateProfile = () => {
                                                 <div className="flex justify-between mb-5">
 
                                                     <h3 className="font-medium">
-                                                        Experience {index + 1}
+                                                        Experience {exp.order}
                                                     </h3>
 
                                                     <button
@@ -1299,19 +1362,15 @@ const UpdateProfile = () => {
 
                                 <div className="space-y-5">
 
-                                    {profile.projects.map(
-                                        (project, index) => (
-
-                                            <ProjectEditor
-                                                key={index}
-                                                project={project}
-                                                index={index}
-                                                updateProject={updateProject}
-                                                removeProject={removeProject}
-                                            />
-
-                                        )
-                                    )}
+                                    {profile.projects.map((project, index) => (
+                                        <ProjectEditor
+                                            key={project._id || project.id || index}
+                                            project={project}
+                                            index={index}
+                                            updateProject={updateProject}
+                                            removeProject={removeProject}
+                                        />
+                                    ))}
 
                                 </div>
 
@@ -1359,7 +1418,7 @@ const UpdateProfile = () => {
                                                 <div className="flex justify-between mb-5">
 
                                                     <h3 className="font-medium">
-                                                        Achievement {index + 1}
+                                                        Achievement {item.order}
                                                     </h3>
 
                                                     <button
@@ -1803,7 +1862,7 @@ const ProjectEditor = ({
         <div className="flex justify-between mb-5">
 
             <h3 className="font-medium">
-                Project {index + 1}
+                Project {project.order}
             </h3>
 
             <button

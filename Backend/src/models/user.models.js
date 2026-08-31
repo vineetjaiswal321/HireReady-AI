@@ -82,7 +82,84 @@ const userSchema=new mongoose.Schema({
         title: String,
         description: String,
         date: Date
-    }]
+    }],
+    settings: {
+    // AI behaviour
+        personalizedPreparation: {
+            type: Boolean,
+            default: true,
+        },
+
+        aiSuggestions: {
+            type: Boolean,
+            default: true,
+        },
+
+        adaptiveDifficulty: {
+            type: Boolean,
+            default: true,
+        },
+
+        followUpQuestions: {
+            type: Boolean,
+            default: true,
+        },
+
+        showHints: {
+            type: Boolean,
+            default: false,
+        },
+
+        detailedFeedback: {
+            type: Boolean,
+            default: true,
+        },
+
+        // Notifications
+        interviewReminders: {
+            type: Boolean,
+            default: true,
+        },
+
+        preparationReminders: {
+            type: Boolean,
+            default: true,
+        },
+
+        jobRecommendations: {
+            type: Boolean,
+            default: true,
+        },
+
+        profileSuggestions: {
+            type: Boolean,
+            default: true,
+        },
+
+        // Privacy
+        profileVisibility: {
+            type: String,
+            enum: ["Public", "Private"],
+            default: "Private",
+        },
+
+        showSocialLinks: {
+            type: Boolean,
+            default: true,
+        },
+
+        showCodingProfiles: {
+            type: Boolean,
+            default: true,
+        },
+
+        // Appearance
+        theme: {
+            type: String,
+            enum: ["Dark", "Light", "System"],
+            default: "Dark",
+        },
+    },
 }, {timestamps : true});
 
 export const User = mongoose.model("User", userSchema);

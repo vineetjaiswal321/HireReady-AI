@@ -8,6 +8,7 @@ import { InterviewProvider } from "./Features/interview/interview.context.jsx"
 import Reports from "./Features/interview/pages/reports.jsx"
 import Profile from "./Features/profile/pages/profile.jsx"
 import UpdateProfile from "./Features/profile/pages/updateProfile.jsx"
+import Settings from "./Features/settings/pages/settings.jsx"
 
 export const router=createBrowserRouter([
     {
@@ -61,6 +62,14 @@ export const router=createBrowserRouter([
         element:(
             <Protected>
                 <UpdateProfile/>
+            </Protected>
+        )
+    },
+    {
+        path: "/settings",
+        element:(
+            <Protected>
+                <Settings/>
             </Protected>
         )
     }
