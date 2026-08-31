@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
     Search,
     FileText,
+    Trash2,
     BriefcaseBusiness,
     ArrowRight,
     Download,
@@ -11,10 +12,11 @@ import {
     TrendingUp,
     Sparkles,
     SlidersHorizontal,
+    Loader2,
 } from "lucide-react";
 
 import { useInterview } from "../../hooks/useInterview.hooks.js";
-
+import PageShell from "../../layout/PageShell.jsx";
 
 const Reports = () => {
     const navigate = useNavigate();
@@ -22,15 +24,16 @@ const Reports = () => {
     const {
         reports: reportsData,
         loading,
-        generateResume
+        generateResume,
+        handleDeleteReport,
     } = useInterview();
 
-
-
     const reports = reportsData ?? [];
-    console.log("REPORTS PAGE:", reports);
     const [search, setSearch] = useState("");
     const [scoreFilter, setScoreFilter] = useState("all");
+
+    const [deleteReportId, setDeleteReportId] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     const filteredReports = useMemo(() => {
         return reports.filter((report) => {
@@ -45,9 +48,7 @@ const Reports = () => {
             }
 
             if (scoreFilter === "good") {
-                matchesScore =
-                    report.matchScore >= 60 &&
-                    report.matchScore < 80;
+                matchesScore = report.matchScore >= 60 && report.matchScore < 80;
             }
 
             if (scoreFilter === "low") {
@@ -61,19 +62,13 @@ const Reports = () => {
     const averageScore =
         reports.length > 0
             ? Math.round(
-                  reports.reduce(
-                      (sum, report) => sum + (report.matchScore || 0),
-                      0
-                  ) / reports.length
+                  reports.reduce((sum, report) => sum + (report.matchScore || 0), 0) /
+                      reports.length
               )
             : 0;
 
     const bestScore =
-        reports.length > 0
-            ? Math.max(
-                  ...reports.map((report) => report.matchScore || 0)
-              )
-            : 0;
+        reports.length > 0 ? Math.max(...reports.map((report) => report.matchScore || 0)) : 0;
 
     const formatDate = (date) => {
         if (!date) return "Unknown date";
@@ -93,460 +88,326 @@ const Reports = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#09090b] text-white p-6">
-                <div className="max-w-7xl mx-auto animate-pulse">
-
-                    <div className="h-10 w-72 bg-zinc-800 rounded-lg mb-3" />
-                    <div className="h-5 w-96 bg-zinc-800 rounded-lg mb-10" />
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-                        {[1, 2, 3].map((item) => (
-                            <div
-                                key={item}
-                                className="h-32 bg-zinc-900 border border-zinc-800 rounded-2xl"
-                            />
-                        ))}
+            <PageShell>
+                <div className="relative mx-auto max-w-7xl px-5 py-10">
+                    <div className="mb-10 flex items-center gap-3 text-sm text-zinc-500">
+                        <Loader2 className="h-4 w-4 animate-spin text-violet-600 dark:text-violet-400" />
+                        Loading reports...
                     </div>
-
-                    <div className="h-14 bg-zinc-900 rounded-xl mb-6" />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {[1, 2, 3, 4, 5, 6].map((item) => (
-                            <div
-                                key={item}
-                                className="h-64 bg-zinc-900 border border-zinc-800 rounded-2xl"
-                            />
-                        ))}
+                    <div className="animate-pulse">
+                        <div className="mb-3 h-10 w-72 rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+                        <div className="mb-10 h-5 w-96 rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+                        <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+                            {[1, 2, 3].map((item) => (
+                                <div
+                                    key={item}
+                                    className="h-32 rounded-2xl border border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-900"
+                                />
+                            ))}
+                        </div>
+                        <div className="mb-6 h-14 rounded-xl bg-zinc-200 dark:bg-zinc-900" />
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                            {[1, 2, 3, 4, 5, 6].map((item) => (
+                                <div
+                                    key={item}
+                                    className="h-64 rounded-2xl border border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-900"
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </PageShell>
         );
     }
 
+    const handleConfirmDelete = async () => {
+        try {
+            setDeleting(true);
+            await handleDeleteReport(deleteReportId);
+            setDeleteReportId(null);
+        } catch (error) {
+            console.error("Failed to delete report:", error);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-[#09090b] text-white">
-
-            {/* Background glow */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[-200px] left-[20%] w-[500px] h-[500px] bg-violet-600/10 blur-[140px] rounded-full" />
-                <div className="absolute top-[30%] right-[-200px] w-[450px] h-[450px] bg-blue-600/10 blur-[140px] rounded-full" />
-            </div>
-
-            <main className="relative max-w-7xl mx-auto px-5 py-10">
-
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10">
-
+        <PageShell>
+            <main className="relative mx-auto max-w-7xl px-5 py-10 md:px-6">
+                <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
-                                <Sparkles
-                                    size={18}
-                                    className="text-violet-400"
-                                />
-                            </div>
-
-                            <span className="text-sm text-violet-400 font-medium">
-                                Career Intelligence
+                        <div className="mb-3 flex items-center gap-2">
+                            <Sparkles size={14} className="text-violet-600 dark:text-violet-400" />
+                            <span className="text-xs font-semibold tracking-[0.18em] text-violet-700 dark:text-violet-400">
+                                CAREER INTELLIGENCE
                             </span>
                         </div>
 
-                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 md:text-4xl dark:text-white">
                             Interview Reports
                         </h1>
 
-                        <p className="text-zinc-400 mt-2">
-                            Review your previous interview analyses and
-                            preparation plans.
+                        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                            Review your previous interview analyses and preparation plans.
                         </p>
                     </div>
 
                     <button
                         onClick={() => navigate("/")}
-                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500"
                     >
-                        <Sparkles size={17} />
+                        <Sparkles size={16} />
                         New Interview
                     </button>
                 </div>
 
+                {deleteReportId && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 backdrop-blur-sm dark:bg-black/50">
+                        <div className="mx-4 w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#111113]">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                                <Trash2 size={22} />
+                            </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                            <h2 className="text-lg font-semibold text-zinc-950 dark:text-white">
+                                Delete report?
+                            </h2>
 
+                            <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                                Are you sure you want to delete this interview report? This action cannot
+                                be undone.
+                            </p>
+
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setDeleteReportId(null)}
+                                    disabled={deleting}
+                                    className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    onClick={handleConfirmDelete}
+                                    disabled={deleting}
+                                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {deleting ? "Deleting..." : "Delete Report"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3">
                     <StatCard
                         icon={<FileText size={20} />}
                         label="Total Reports"
                         value={reports.length}
                         description="Interview analyses generated"
                     />
-
                     <StatCard
                         icon={<Target size={20} />}
                         label="Average Match"
                         value={`${averageScore}%`}
                         description="Across all your reports"
                     />
-
                     <StatCard
                         icon={<TrendingUp size={20} />}
                         label="Best Match"
                         value={`${bestScore}%`}
                         description={
-                            bestScore >= 80
-                                ? "Strong job alignment"
-                                : "Keep improving your profile"
+                            bestScore >= 80 ? "Strong job alignment" : "Keep improving your profile"
                         }
                     />
-
                 </div>
 
-
-                {/* Search + Filter */}
-                <div className="flex flex-col md:flex-row gap-3 mb-7">
-
+                <div className="mb-7 flex flex-col gap-3 md:flex-row">
                     <div className="relative flex-1">
-
                         <Search
                             size={19}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
                         />
-
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by job title..."
-                            className="w-full h-12 pl-11 pr-4 rounded-xl bg-zinc-900 border border-zinc-800 outline-none text-sm placeholder:text-zinc-600 focus:border-violet-500/60 transition"
+                            className="h-12 w-full rounded-xl border border-zinc-200 bg-white pl-11 pr-4 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15 dark:border-white/10 dark:bg-[#111113] dark:text-white dark:placeholder:text-zinc-600"
                         />
-
                     </div>
-
 
                     <div className="relative">
-
                         <SlidersHorizontal
                             size={17}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
                         />
-
                         <select
                             value={scoreFilter}
-                            onChange={(e) =>
-                                setScoreFilter(e.target.value)
-                            }
-                            className="h-12 pl-10 pr-10 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-300 outline-none focus:border-violet-500/60 appearance-none"
+                            onChange={(e) => setScoreFilter(e.target.value)}
+                            className="h-12 appearance-none rounded-xl border border-zinc-200 bg-white pl-10 pr-10 text-sm text-zinc-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15 dark:border-white/10 dark:bg-[#111113] dark:text-zinc-300"
                         >
-                            <option value="all">
-                                All Scores
-                            </option>
-
-                            <option value="excellent">
-                                Excellent · 80%+
-                            </option>
-
-                            <option value="good">
-                                Good · 60–79%
-                            </option>
-
-                            <option value="low">
-                                Needs Work · Below 60%
-                            </option>
+                            <option value="all">All Scores</option>
+                            <option value="excellent">Excellent · 80%+</option>
+                            <option value="good">Good · 60–79%</option>
+                            <option value="low">Needs Work · Below 60%</option>
                         </select>
-
                     </div>
-
                 </div>
 
-
-                {/* Results count */}
-                <div className="flex items-center justify-between mb-5">
-
+                <div className="mb-5 flex items-center justify-between">
                     <p className="text-sm text-zinc-500">
                         Showing{" "}
-                        <span className="text-zinc-300 font-medium">
+                        <span className="font-medium text-zinc-800 dark:text-zinc-300">
                             {filteredReports.length}
                         </span>{" "}
                         report
                         {filteredReports.length !== 1 && "s"}
                     </p>
-
-                    <div className="h-px flex-1 bg-zinc-800 ml-5" />
-
+                    <div className="ml-5 h-px flex-1 bg-zinc-200 dark:bg-white/10" />
                 </div>
 
-
-                {/* Empty state */}
                 {filteredReports.length === 0 ? (
-                    <div className="border border-zinc-800 bg-zinc-900/50 rounded-2xl py-20 text-center">
-
-                        <div className="mx-auto w-16 h-16 rounded-2xl bg-zinc-800 flex items-center justify-center mb-5">
-                            <FileText
-                                size={28}
-                                className="text-zinc-500"
-                            />
+                    <div className="rounded-2xl border border-zinc-200 bg-white py-20 text-center shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[#111113] dark:shadow-none">
+                        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+                            <FileText size={28} className="text-zinc-400" />
                         </div>
-
-                        <h2 className="text-xl font-semibold mb-2">
+                        <h2 className="mb-2 text-xl font-semibold text-zinc-950 dark:text-white">
                             No reports found
                         </h2>
-
-                        <p className="text-zinc-500 max-w-md mx-auto mb-6">
+                        <p className="mx-auto mb-6 max-w-md text-sm text-zinc-500">
                             {reports.length === 0
                                 ? "Generate your first interview report to start tracking your preparation."
                                 : "Try changing your search or filter."}
                         </p>
-
                         {reports.length === 0 && (
                             <button
                                 onClick={() => navigate("/")}
-                                className="px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 transition font-medium"
+                                className="rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-500"
                             >
                                 Create Interview Report
                             </button>
                         )}
-
                     </div>
                 ) : (
-
-                    /* Reports grid */
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                         {filteredReports.map((report) => (
-
                             <ReportCard
                                 key={report._id}
                                 report={report}
                                 formatDate={formatDate}
                                 getScoreLabel={getScoreLabel}
-                                onView={() =>
-                                    navigate(
-                                        `/interview/${report._id}`
-                                    )
-                                }
+                                onView={() => navigate(`/interview/${report._id}`)}
                                 onDownload={generateResume}
+                                onDelete={() => setDeleteReportId(report._id)}
                             />
-
                         ))}
-
                     </div>
-
                 )}
-
             </main>
-        </div>
+        </PageShell>
     );
 };
 
-
-/* =====================================================
-   STAT CARD
-===================================================== */
-
-const StatCard = ({
-    icon,
-    label,
-    value,
-    description,
-}) => {
-
+const StatCard = ({ icon, label, value, description }) => {
     return (
-        <div className="relative overflow-hidden p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800 hover:border-zinc-700 transition">
-
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition hover:border-zinc-300 dark:border-white/10 dark:bg-[#111113] dark:shadow-none dark:hover:border-white/20">
             <div className="flex items-start justify-between">
-
                 <div>
-
-                    <p className="text-sm text-zinc-500">
-                        {label}
-                    </p>
-
-                    <p className="text-3xl font-bold mt-2">
-                        {value}
-                    </p>
-
+                    <p className="text-sm text-zinc-500">{label}</p>
+                    <p className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{value}</p>
                 </div>
-
-                <div className="p-3 rounded-xl bg-violet-500/10 text-violet-400">
+                <div className="rounded-xl bg-violet-50 p-3 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
                     {icon}
                 </div>
-
             </div>
-
-            <p className="text-xs text-zinc-600 mt-3">
-                {description}
-            </p>
-
+            <p className="mt-3 text-xs text-zinc-500">{description}</p>
         </div>
     );
 };
 
-
-/* =====================================================
-   REPORT CARD
-===================================================== */
-
-const ReportCard = ({
-    report,
-    formatDate,
-    getScoreLabel,
-    onView,
-    onDownload,
-}) => {
-
+const ReportCard = ({ report, formatDate, getScoreLabel, onView, onDownload, onDelete }) => {
     const score = report.matchScore || 0;
 
     return (
-        <div className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/70 hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-300">
-
-            {/* Top gradient */}
-            <div className="h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 opacity-70" />
+        <div className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 hover:border-zinc-300 dark:border-white/10 dark:bg-[#111113] dark:shadow-none dark:hover:border-white/20">
+            <div className="h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 opacity-80" />
 
             <div className="p-5">
-
-                {/* Title */}
-                <div className="flex items-start justify-between gap-4 mb-5">
-
-                    <div className="flex gap-3 min-w-0">
-
-                        <div className="shrink-0 w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                            <BriefcaseBusiness
-                                size={20}
-                                className="text-violet-400"
-                            />
+                <div className="mb-5 flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-violet-200 bg-violet-50 dark:border-violet-500/20 dark:bg-violet-500/10">
+                            <BriefcaseBusiness size={20} className="text-violet-600 dark:text-violet-400" />
                         </div>
-
                         <div className="min-w-0">
-
-                            <h3 className="font-semibold text-base truncate">
+                            <h3 className="truncate text-base font-semibold text-zinc-950 dark:text-white">
                                 {report.title || "Interview Report"}
                             </h3>
-
-                            <div className="flex items-center gap-1.5 mt-1 text-xs text-zinc-500">
+                            <div className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500">
                                 <CalendarDays size={13} />
                                 {formatDate(report.createdAt)}
                             </div>
-
                         </div>
-
                     </div>
 
-
-                    {/* Score */}
                     <div className="shrink-0 text-right">
-
-                        <div className="text-2xl font-bold">
-                            {score}%
-                        </div>
-
-                        <div className="text-[11px] text-zinc-500">
-                            Match
-                        </div>
-
+                        <div className="text-2xl font-semibold text-zinc-950 dark:text-white">{score}%</div>
+                        <div className="text-[11px] text-zinc-500">Match</div>
                     </div>
-
                 </div>
 
-
-                {/* Score progress */}
                 <div className="mb-5">
-
-                    <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-
+                    <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
                         <div
-                            className="h-full rounded-full bg-violet-500 transition-all"
-                            style={{
-                                width: `${Math.min(score, 100)}%`,
-                            }}
+                            className="h-full rounded-full bg-violet-600 transition-all"
+                            style={{ width: `${Math.min(score, 100)}%` }}
                         />
-
                     </div>
-
-                    <div className="flex justify-between mt-2">
-
-                        <span className="text-xs text-zinc-500">
-                            Job compatibility
-                        </span>
-
-                        <span className="text-xs text-zinc-400">
-                            {getScoreLabel(score)}
-                        </span>
-
+                    <div className="mt-2 flex justify-between">
+                        <span className="text-xs text-zinc-500">Job compatibility</span>
+                        <span className="text-xs text-zinc-600 dark:text-zinc-400">{getScoreLabel(score)}</span>
                     </div>
-
                 </div>
 
-
-                {/* Meta */}
-                <div className="grid grid-cols-2 gap-2 mb-5">
-
-                    <InfoItem
-                        label="Experience"
-                        value={
-                            report.experienceLevel ||
-                            "Entry Level"
-                        }
-                    />
-
-                    <InfoItem
-                        label="Interview"
-                        value={
-                            report.interviewType ||
-                            "Technical"
-                        }
-                    />
-
+                <div className="mb-5 grid grid-cols-2 gap-2">
+                    <InfoItem label="Experience" value={report.experienceLevel || "Entry Level"} />
+                    <InfoItem label="Interview" value={report.interviewType || "Technical"} />
                 </div>
 
-
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-2">
-
+                <div className="grid grid-cols-3 gap-2">
                     <button
                         onClick={onView}
-                        className="flex items-center justify-center gap-2 h-11 rounded-xl bg-zinc-800 hover:bg-violet-600 transition font-medium text-sm"
+                        className="flex h-11 items-center justify-center gap-2 rounded-xl bg-violet-600 text-sm font-medium text-white transition hover:bg-violet-500"
                     >
-                        View Report
-
-                        <ArrowRight
-                            size={16}
-                            className="group-hover:translate-x-1 transition-transform"
-                        />
+                        View
+                        <ArrowRight size={15} />
                     </button>
 
                     <button
                         onClick={() => onDownload(report._id)}
-                        className="flex items-center justify-center gap-2 h-11 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 transition font-medium text-sm"
+                        className="flex h-11 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
                     >
-                        <Download size={16} />
-
-                        Resume PDF
+                        <Download size={15} />
+                        PDF
                     </button>
 
+                    <button
+                        onClick={onDelete}
+                        className="flex h-11 items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 text-sm font-medium text-red-600 transition hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/15"
+                    >
+                        <Trash2 size={15} />
+                        Delete
+                    </button>
                 </div>
-
             </div>
         </div>
     );
 };
 
-
-/* =====================================================
-   INFO ITEM
-===================================================== */
-
 const InfoItem = ({ label, value }) => {
-
     return (
-        <div className="rounded-xl bg-zinc-950/70 border border-zinc-800/70 p-3">
-
-            <p className="text-[10px] uppercase tracking-wider text-zinc-600">
-                {label}
-            </p>
-
-            <p className="text-xs text-zinc-300 mt-1 capitalize truncate">
-                {value}
-            </p>
-
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-zinc-950/70">
+            <p className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</p>
+            <p className="mt-1 truncate text-xs capitalize text-zinc-700 dark:text-zinc-300">{value}</p>
         </div>
     );
 };

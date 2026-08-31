@@ -5,7 +5,7 @@ import { InterviewReport } from "../models/interviewReport.models.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import ApiError from "../utils/ApiError.js";
-
+import {User} from "../models/user.models.js"
 
 const generateInterviewReportController = asyncHandler(async (req, res) => {
 
@@ -130,7 +130,41 @@ const generateResumePdfController=asyncHandler(async (req, res)=>{
 
     const {resume, jobDescription, selfDescription}=interviewReport
 
-    const pdfBuffer=await generateResumePDF({resume, jobDescription, selfDescription})
+    const user=await User.findById(req.user.id).select("-password")
+
+    if(!user){
+        throw new ApiError(404, "User Not Found")
+    }
+
+    const profile = {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        location: user.location,
+
+        headline: user.headline,
+        summary: user.summary,
+
+        skills: user.skills,
+        experience: user.experience,
+        education: user.education,
+        projects: user.projects,
+        certifications: user.certifications,
+        achievements: user.achievements,
+
+        socialLinks: {
+            github: user.socialLinks?.github,
+            linkedin: user.socialLinks?.linkedin,
+            portfolio: user.socialLinks?.portfolio,
+            twitter: user.socialLinks?.twitter,
+            devto: user.socialLinks?.devto,
+            medium: user.socialLinks?.medium,
+            leetcode: user.socialLinks?.leetcode
+        }
+    };
+
+
+    const pdfBuffer=await generateResumePDF({resume, jobDescription, selfDescription, profile})
 
     res.set({
         "Content-Type": "application/pdf",
@@ -142,9 +176,36 @@ const generateResumePdfController=asyncHandler(async (req, res)=>{
 })
 
 
+const deleteReport=asyncHandler(async (req, res)=>{
+    const userId=req.user.id;
+    const {reportId}=req.params;
+
+    const report=await InterviewReport.findOneAndDelete({
+        _id: reportId,
+        user: userId
+    })
+
+    if(!report){
+        throw new ApiError(404, "Report not found")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            null,
+            "Report deleted successfully"
+        )
+    )
+
+
+})
+
 export  {
     generateInterviewReportController,
     generateInterviewReportByIdController,
     getAllInterviewReportsController,
-    generateResumePdfController
+    generateResumePdfController,
+    deleteReport
 };

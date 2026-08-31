@@ -6,7 +6,8 @@ import {
     generateInterviewReportController,
     generateInterviewReportByIdController,
     getAllInterviewReportsController,
-    generateResumePdfController
+    generateResumePdfController,
+    deleteReport
 } from "../controllers/interview.controllers.js";
 
 import upload from "../middlewares/file.middlewares.js";
@@ -38,7 +39,17 @@ interviewRouter.get(
     getAllInterviewReportsController
 );
 
+interviewRouter.post(
+    "/resume/pdf/:interviewReportId",
+    authUser, 
+    generateResumePdfController
+)
 
-interviewRouter.post("/resume/pdf/:interviewReportId", authUser, generateResumePdfController)
+interviewRouter.delete(
+    "/reports/:reportId",
+    authUser,
+    deleteReport
+);
+
 
 export default interviewRouter;

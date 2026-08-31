@@ -101,3 +101,9 @@ export const downloadResumePDF = async (interviewReportId) => {
 };
 
 
+export const deleteReport=async (reportId)=>{
+    const response=await api.delete(
+        `/api/interview/reports/${reportId}`
+    )
+    return response.data;
+}

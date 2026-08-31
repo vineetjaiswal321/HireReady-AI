@@ -1,7 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    ArrowLeft,
+    Award,
+    BriefcaseBusiness,
+    Code2,
+    GraduationCap,
+    Layers,
+    Link2,
+    Loader2,
+    Plus,
+    Sparkles,
+    User,
+} from "lucide-react";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { updateProfile } from "../services/profile.api";
+import PageShell from "../../layout/PageShell.jsx";
 
 const UpdateProfile = () => {
     const { user, setUser } = useAuth();
@@ -553,84 +567,56 @@ const UpdateProfile = () => {
     if (!user) {
 
         return (
-            <div className="min-h-screen bg-[#08090d]
-                flex items-center justify-center text-white">
-
-                Loading...
-
-            </div>
+            <PageShell>
+                <div className="flex min-h-[70vh] items-center justify-center">
+                    <div className="text-center">
+                        <Loader2 className="mx-auto h-8 w-8 animate-spin text-violet-600 dark:text-violet-400" />
+                        <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                            Loading...
+                        </p>
+                    </div>
+                </div>
+            </PageShell>
         );
 
     }
 
 
     return (
-        <div className="min-h-screen bg-[#08090d] text-white">
-
-            {/* Background */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-
-                <div
-                    className="absolute top-[-200px] left-[20%]
-                    w-[500px] h-[500px]
-                    bg-purple-600/10
-                    blur-[150px]
-                    rounded-full"
-                />
-
-                <div
-                    className="absolute bottom-[-200px] right-[5%]
-                    w-[500px] h-[500px]
-                    bg-violet-600/10
-                    blur-[150px]
-                    rounded-full"
-                />
-
-            </div>
+        <PageShell>
+            <main className="relative mx-auto max-w-7xl px-5 py-8 md:px-8">
 
 
-            <main className="relative max-w-7xl mx-auto
-                px-5 md:px-8 py-8">
-
-
-                {/* Header */}
-                <div className="flex flex-col md:flex-row
-                    md:items-center md:justify-between
-                    gap-5 mb-8">
-
+                <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                     <div>
-
                         <button
                             onClick={() => navigate("/profile")}
-                            className="text-sm text-gray-500
-                                hover:text-white transition mb-3"
+                            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
                         >
-                            ← Back to Profile
+                            <ArrowLeft size={15} />
+                            Back to Profile
                         </button>
 
-                        <h1 className="text-3xl md:text-4xl
-                            font-bold tracking-tight">
+                        <div className="flex items-center gap-2">
+                            <Sparkles size={14} className="text-violet-600 dark:text-violet-400" />
+                            <span className="text-xs font-semibold tracking-[0.18em] text-violet-700 dark:text-violet-400">
+                                PROFILE EDITOR
+                            </span>
+                        </div>
+
+                        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-950 md:text-4xl dark:text-white">
                             Edit Profile
                         </h1>
 
-                        <p className="text-gray-500 mt-2">
-                            Build a stronger professional profile
-                            for better AI recommendations.
+                        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                            Build a stronger professional profile for better AI recommendations.
                         </p>
-
                     </div>
 
-
                     <div className="flex gap-3">
-
                         <button
                             onClick={() => navigate("/profile")}
-                            className="px-5 py-3 rounded-xl
-                                border border-white/[0.08]
-                                text-gray-400
-                                hover:text-white
-                                hover:bg-white/[0.04]
-                                transition"
+                            className="rounded-lg border border-zinc-300 bg-white px-5 py-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                         >
                             Cancel
                         </button>
@@ -638,24 +624,11 @@ const UpdateProfile = () => {
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="px-6 py-3 rounded-xl
-                                bg-gradient-to-r
-                                from-violet-600
-                                to-purple-600
-                                hover:from-violet-500
-                                hover:to-purple-500
-                                shadow-lg
-                                shadow-purple-900/20
-                                transition
-                                disabled:opacity-50"
+                            className="rounded-lg bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 disabled:opacity-50"
                         >
-                            {saving
-                                ? "Saving..."
-                                : "Save Changes"}
+                            {saving ? "Saving..." : "Save Changes"}
                         </button>
-
                     </div>
-
                 </div>
 
 
@@ -664,138 +637,80 @@ const UpdateProfile = () => {
                     gap-6">
 
 
-                    {/* LEFT NAVIGATION */}
-                    <aside className="lg:sticky lg:top-6
-                        h-fit">
-
-                        <div className="rounded-2xl
-                            border border-white/[0.07]
-                            bg-[#0e1017]
-                            p-3">
-
+                    <aside className="h-fit lg:sticky lg:top-24">
+                        <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[#111113] dark:shadow-none">
                             <SectionButton
                                 active={activeSection === "personal"}
-                                onClick={() =>
-                                    setActiveSection("personal")
-                                }
-                                icon="◎"
+                                onClick={() => setActiveSection("personal")}
+                                icon={User}
                                 label="Personal Info"
                             />
-
                             <SectionButton
                                 active={activeSection === "social"}
-                                onClick={() =>
-                                    setActiveSection("social")
-                                }
-                                icon="↗"
+                                onClick={() => setActiveSection("social")}
+                                icon={Link2}
                                 label="Social Links"
                             />
-
                             <SectionButton
                                 active={activeSection === "coding"}
-                                onClick={() =>
-                                    setActiveSection("coding")
-                                }
-                                icon="<>"
+                                onClick={() => setActiveSection("coding")}
+                                icon={Code2}
                                 label="Coding Profiles"
                             />
-
                             <SectionButton
                                 active={activeSection === "skills"}
-                                onClick={() =>
-                                    setActiveSection("skills")
-                                }
-                                icon="✦"
+                                onClick={() => setActiveSection("skills")}
+                                icon={Sparkles}
                                 label="Skills"
                             />
-
                             <SectionButton
                                 active={activeSection === "education"}
-                                onClick={() =>
-                                    setActiveSection("education")
-                                }
-                                icon="▤"
+                                onClick={() => setActiveSection("education")}
+                                icon={GraduationCap}
                                 label="Education"
                             />
-
                             <SectionButton
                                 active={activeSection === "experience"}
-                                onClick={() =>
-                                    setActiveSection("experience")
-                                }
-                                icon="◫"
+                                onClick={() => setActiveSection("experience")}
+                                icon={BriefcaseBusiness}
                                 label="Experience"
                             />
-
                             <SectionButton
                                 active={activeSection === "projects"}
-                                onClick={() =>
-                                    setActiveSection("projects")
-                                }
-                                icon="▣"
+                                onClick={() => setActiveSection("projects")}
+                                icon={Layers}
                                 label="Projects"
                             />
-
                             <SectionButton
                                 active={activeSection === "achievements"}
-                                onClick={() =>
-                                    setActiveSection("achievements")
-                                }
-                                icon="★"
+                                onClick={() => setActiveSection("achievements")}
+                                icon={Award}
                                 label="Achievements"
                             />
-
                         </div>
 
-
-                        {/* Completion card */}
-                        <div className="rounded-2xl
-                            border border-purple-500/20
-                            bg-gradient-to-br
-                            from-purple-900/20
-                            to-transparent
-                            p-5 mt-4">
-
+                        <div className="mt-4 rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5 dark:border-violet-500/20 dark:from-violet-500/10 dark:to-transparent">
                             <div className="flex justify-between">
-
                                 <div>
-                                    <p className="text-sm font-medium">
+                                    <p className="text-sm font-medium text-zinc-950 dark:text-white">
                                         Profile Strength
                                     </p>
-
-                                    <p className="text-xs
-                                        text-gray-500 mt-1">
+                                    <p className="mt-1 text-xs text-zinc-500">
                                         Keep improving your profile
                                     </p>
                                 </div>
-
-                                <span className="text-purple-400
-                                    font-bold">
+                                <span className="font-bold text-violet-700 dark:text-violet-400">
                                     {completion}%
                                 </span>
-
                             </div>
 
-
-                            <div className="h-2 bg-white/[0.06]
-                                rounded-full mt-4 overflow-hidden">
-
+                            <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.06]">
                                 <div
-                                    className="h-full
-                                        bg-gradient-to-r
-                                        from-violet-600
-                                        to-purple-400
-                                        rounded-full
-                                        transition-all"
-                                    style={{
-                                        width: `${completion}%`,
-                                    }}
+                                    className="h-full rounded-full bg-violet-600 transition-all"
+                                    style={{ width: `${completion}%` }}
                                 />
-
                             </div>
-
                         </div>
-
                     </aside>
 
 
@@ -1055,9 +970,11 @@ const UpdateProfile = () => {
                                                 key={index}
                                                 className="rounded-xl
                                                     border
-                                                    border-white/[0.07]
-                                                    bg-white/[0.02]
-                                                    p-5"
+                                                    border-zinc-200
+                                                    bg-zinc-50
+                                                    p-5
+                                                    dark:border-white/10
+                                                    dark:bg-white/[0.02]"
                                             >
 
                                                 <div className="flex justify-between mb-5">
@@ -1071,8 +988,10 @@ const UpdateProfile = () => {
                                                             removeEducation(index)
                                                         }
                                                         className="text-xs
-                                                            text-red-400
-                                                            hover:text-red-300"
+                                                            text-red-600
+                                                            hover:text-red-500
+                                                            dark:text-red-400
+                                                            dark:hover:text-red-300"
                                                     >
                                                         Remove
                                                     </button>
@@ -1205,9 +1124,11 @@ const UpdateProfile = () => {
                                                 key={index}
                                                 className="rounded-xl
                                                     border
-                                                    border-white/[0.07]
-                                                    bg-white/[0.02]
-                                                    p-5"
+                                                    border-zinc-200
+                                                    bg-zinc-50
+                                                    p-5
+                                                    dark:border-white/10
+                                                    dark:bg-white/[0.02]"
                                             >
 
                                                 <div className="flex justify-between mb-5">
@@ -1220,8 +1141,7 @@ const UpdateProfile = () => {
                                                         onClick={() =>
                                                             removeExperience(index)
                                                         }
-                                                        className="text-xs
-                                                            text-red-400"
+                                                        className="text-xs text-red-600 dark:text-red-400"
                                                     >
                                                         Remove
                                                     </button>
@@ -1287,7 +1207,7 @@ const UpdateProfile = () => {
                                                 </div>
 
 
-                                                <label className="flex items-center gap-2 mt-4 text-sm text-gray-400">
+                                                <label className="mt-4 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
 
                                                     <input
                                                         type="checkbox"
@@ -1410,9 +1330,11 @@ const UpdateProfile = () => {
                                                 key={index}
                                                 className="rounded-xl
                                                     border
-                                                    border-white/[0.07]
-                                                    bg-white/[0.02]
-                                                    p-5"
+                                                    border-zinc-200
+                                                    bg-zinc-50
+                                                    p-5
+                                                    dark:border-white/10
+                                                    dark:bg-white/[0.02]"
                                             >
 
                                                 <div className="flex justify-between mb-5">
@@ -1425,8 +1347,7 @@ const UpdateProfile = () => {
                                                         onClick={() =>
                                                             removeAchievement(index)
                                                         }
-                                                        className="text-xs
-                                                            text-red-400"
+                                                        className="text-xs text-red-600 dark:text-red-400"
                                                     >
                                                         Remove
                                                     </button>
@@ -1500,8 +1421,8 @@ const UpdateProfile = () => {
                             <div
                                 className={`mt-5 rounded-xl border p-4 text-sm ${
                                     error
-                                        ? "border-red-500/20 bg-red-500/5 text-red-400"
-                                        : "border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
+                                        ? "border-red-200 bg-red-50 text-red-600 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-400"
+                                        : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400"
                                 }`}
                             >
                                 {error || message}
@@ -1514,8 +1435,7 @@ const UpdateProfile = () => {
                 </div>
 
             </main>
-
-        </div>
+        </PageShell>
     );
 };
 
@@ -1528,29 +1448,28 @@ const UpdateProfile = () => {
 const SectionButton = ({
     active,
     onClick,
-    icon,
+    icon: Icon,
     label,
 }) => (
 
     <button
         onClick={onClick}
-        className={`w-full flex items-center gap-3
-            px-4 py-3 rounded-xl mb-1
-            text-sm transition ${
-                active
-                    ? "bg-purple-600/15 text-purple-300 border border-purple-500/20"
-                    : "text-gray-500 hover:text-white hover:bg-white/[0.03]"
-            }`}
+        className={`mb-1 flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left text-sm font-medium transition ${
+            active
+                ? "border-violet-600 bg-violet-50 text-violet-700 dark:border-violet-500/40 dark:bg-violet-500/10 dark:text-violet-300"
+                : "border-transparent text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/[0.04] dark:hover:text-white"
+        }`}
     >
-
-        <span className="w-7 text-center">
-            {icon}
+        <span
+            className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                active
+                    ? "bg-violet-600 text-white"
+                    : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+            }`}
+        >
+            <Icon size={15} />
         </span>
-
-        <span>
-            {label}
-        </span>
-
+        <span>{label}</span>
     </button>
 );
 
@@ -1562,37 +1481,21 @@ const EditorCard = ({
     children,
 }) => (
 
-    <section className="rounded-2xl
-        border border-white/[0.07]
-        bg-[#0e1017]
-        overflow-hidden">
-
-        <div className="p-6 md:p-7
-            border-b border-white/[0.06]
-            flex flex-col sm:flex-row
-            sm:items-center sm:justify-between
-            gap-4">
-
+    <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-[#111113] dark:shadow-none">
+        <div className="flex flex-col gap-4 border-b border-zinc-200 bg-zinc-50/80 p-6 sm:flex-row sm:items-center sm:justify-between md:p-7 dark:border-white/10 dark:bg-zinc-950/40">
             <div>
-
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold text-zinc-950 dark:text-white">
                     {title}
                 </h2>
-
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                     {description}
                 </p>
-
             </div>
-
             {action}
-
         </div>
-
         <div className="p-6 md:p-7">
             {children}
         </div>
-
     </section>
 );
 
@@ -1608,12 +1511,9 @@ const Input = ({
 }) => (
 
     <div>
-
-        <label className="block text-sm
-            font-medium text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             {label}
         </label>
-
         <input
             type={type}
             name={name}
@@ -1621,20 +1521,8 @@ const Input = ({
             onChange={onChange}
             disabled={disabled}
             placeholder={placeholder}
-            className="w-full px-4 py-3
-                rounded-xl
-                bg-[#090b10]
-                border border-white/[0.08]
-                text-white
-                placeholder:text-gray-700
-                outline-none
-                focus:border-purple-500/50
-                focus:ring-2
-                focus:ring-purple-500/10
-                transition
-                disabled:opacity-40"
+            className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15 disabled:opacity-40 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-600"
         />
-
     </div>
 );
 
@@ -1648,32 +1536,17 @@ const TextArea = ({
 }) => (
 
     <div>
-
-        <label className="block text-sm
-            font-medium text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             {label}
         </label>
-
         <textarea
             name={name}
             value={value || ""}
             onChange={onChange}
             rows={5}
             placeholder={placeholder}
-            className="w-full px-4 py-3
-                rounded-xl
-                bg-[#090b10]
-                border border-white/[0.08]
-                text-white
-                placeholder:text-gray-700
-                outline-none
-                resize-none
-                focus:border-purple-500/50
-                focus:ring-2
-                focus:ring-purple-500/10
-                transition"
+            className="w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-600"
         />
-
     </div>
 );
 
@@ -1689,118 +1562,68 @@ const SkillEditor = ({
     const [value, setValue] = useState("");
 
     const handleAdd = () => {
-
         onAdd(category, value);
         setValue("");
-
     };
-
 
     const handleKeyDown = (e) => {
-
         if (e.key === "Enter") {
-
             e.preventDefault();
-
             handleAdd();
-
         }
-
     };
-
 
     return (
         <div className="mb-7 last:mb-0">
-
-            <label className="block text-sm
-                font-medium text-gray-300 mb-3">
+            <label className="mb-3 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {title}
             </label>
 
             <div className="flex gap-2">
-
                 <input
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={`Add ${title.toLowerCase()}...`}
-                    className="flex-1 px-4 py-3
-                        rounded-xl
-                        bg-[#090b10]
-                        border border-white/[0.08]
-                        text-white
-                        placeholder:text-gray-700
-                        outline-none
-                        focus:border-purple-500/50"
+                    className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 focus:border-violet-500 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-600"
                 />
-
                 <button
                     onClick={handleAdd}
-                    className="px-5 rounded-xl
-                        bg-purple-600/15
-                        border border-purple-500/20
-                        text-purple-400
-                        hover:bg-purple-600/25
-                        transition"
+                    className="rounded-xl border border-violet-200 bg-violet-50 px-5 text-sm font-medium text-violet-700 transition hover:bg-violet-100 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20"
                 >
                     Add
                 </button>
-
             </div>
 
-
-            <div className="flex flex-wrap gap-2 mt-4">
-
+            <div className="mt-4 flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-
                     <span
                         key={index}
-                        className="flex items-center gap-2
-                            px-3 py-1.5
-                            rounded-lg
-                            bg-purple-500/10
-                            border border-purple-500/10
-                            text-sm text-purple-300"
+                        className="flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm text-violet-700 dark:border-violet-500/10 dark:bg-violet-500/10 dark:text-violet-300"
                     >
-
                         {skill}
-
                         <button
-                            onClick={() =>
-                                onRemove(category, skill)
-                            }
-                            className="text-purple-500
-                                hover:text-red-400"
+                            onClick={() => onRemove(category, skill)}
+                            className="text-violet-500 hover:text-red-500"
                         >
                             ×
                         </button>
-
                     </span>
-
                 ))}
-
             </div>
-
         </div>
     );
 };
 
 
 const AddButton = ({ onClick }) => (
-
     <button
         onClick={onClick}
-        className="px-4 py-2 rounded-lg
-            bg-purple-500/10
-            border border-purple-500/20
-            text-purple-400
-            text-sm
-            hover:bg-purple-500/20
-            transition"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20"
     >
-        + Add
+        <Plus size={14} />
+        Add
     </button>
-
 );
 
 
@@ -1811,38 +1634,22 @@ const EmptyEditor = ({
     onClick,
 }) => (
 
-    <div className="py-14 text-center
-        rounded-xl
-        border border-dashed
-        border-white/[0.08]">
-
-        <div className="w-12 h-12 mx-auto
-            rounded-xl
-            bg-purple-500/10
-            flex items-center justify-center
-            text-purple-400 text-xl">
-            +
+    <div className="rounded-xl border border-dashed border-zinc-300 py-14 text-center dark:border-white/10">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+            <Plus size={20} />
         </div>
-
-        <h3 className="font-medium mt-4">
+        <h3 className="mt-4 font-medium text-zinc-950 dark:text-white">
             {title}
         </h3>
-
-        <p className="text-sm text-gray-600
-            max-w-sm mx-auto mt-2">
+        <p className="mx-auto mt-2 max-w-sm text-sm text-zinc-500">
             {description}
         </p>
-
         <button
             onClick={onClick}
-            className="mt-5 px-4 py-2 rounded-lg
-                bg-purple-600
-                hover:bg-purple-500
-                text-sm transition"
+            className="mt-5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500"
         >
             {buttonText}
         </button>
-
     </div>
 );
 
@@ -1854,30 +1661,20 @@ const ProjectEditor = ({
     removeProject,
 }) => (
 
-    <div className="rounded-xl
-        border border-white/[0.07]
-        bg-white/[0.02]
-        p-5">
-
-        <div className="flex justify-between mb-5">
-
-            <h3 className="font-medium">
+    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-white/10 dark:bg-white/[0.02]">
+        <div className="mb-5 flex justify-between">
+            <h3 className="font-medium text-zinc-950 dark:text-white">
                 Project {project.order}
             </h3>
-
             <button
                 onClick={() => removeProject(index)}
-                className="text-xs text-red-400
-                    hover:text-red-300"
+                className="text-xs text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300"
             >
                 Remove
             </button>
-
         </div>
 
-
-        <div className="grid md:grid-cols-2 gap-4">
-
+        <div className="grid gap-4 md:grid-cols-2">
             <Input
                 label="Project Name"
                 value={project.name}
@@ -1890,7 +1687,6 @@ const ProjectEditor = ({
                 }
                 placeholder="HireReady AI"
             />
-
             <Input
                 label="Your Role"
                 value={project.role}
@@ -1903,7 +1699,6 @@ const ProjectEditor = ({
                 }
                 placeholder="Full Stack Developer"
             />
-
             <Input
                 label="GitHub URL"
                 value={project.githubUrl}
@@ -1916,7 +1711,6 @@ const ProjectEditor = ({
                 }
                 placeholder="https://github.com/..."
             />
-
             <Input
                 label="Live Project URL"
                 value={project.liveUrl}
@@ -1929,12 +1723,9 @@ const ProjectEditor = ({
                 }
                 placeholder="https://..."
             />
-
         </div>
 
-
         <div className="mt-4">
-
             <TextArea
                 label="Description"
                 value={project.description}
@@ -1947,9 +1738,7 @@ const ProjectEditor = ({
                 }
                 placeholder="Explain what you built and the problem it solves..."
             />
-
         </div>
-
     </div>
 );
 

@@ -122,7 +122,7 @@ const InterviewStrategy = () => {
             <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
                 <button
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate(-1)}
                     className="flex items-center gap-2 text-zinc-400 hover:text-white transition"
                 >
                     <ArrowLeft size={18} />

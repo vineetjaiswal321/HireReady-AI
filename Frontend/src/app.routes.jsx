@@ -4,7 +4,6 @@ import Register from "./Features/auth/pages/register.jsx"
 import Protected from "./Features/auth/components/protected.jsx"
 import Home from "./Features/interview/pages/home.jsx"
 import InterviewStrategy from "./Features/interview/pages/interview.jsx";
-import { InterviewProvider } from "./Features/interview/interview.context.jsx"
 import Reports from "./Features/interview/pages/reports.jsx"
 import Profile from "./Features/profile/pages/profile.jsx"
 import UpdateProfile from "./Features/profile/pages/updateProfile.jsx"
@@ -23,9 +22,7 @@ export const router=createBrowserRouter([
         path:"/",
         element:(
             <Protected>
-                <InterviewProvider>
-                    <Home />
-                </InterviewProvider>
+                <Home />
             </Protected>
         )
     },
@@ -33,9 +30,7 @@ export const router=createBrowserRouter([
         path: "/interview/:interviewId",
         element:(
             <Protected>
-                <InterviewProvider>
-                    <InterviewStrategy />
-                </InterviewProvider>
+                <InterviewStrategy />
             </Protected>
         )
     },
@@ -43,9 +38,7 @@ export const router=createBrowserRouter([
         path: "/reports",
         element: (
             <Protected>
-                <InterviewProvider>
-                    <Reports />
-                </InterviewProvider>
+                <Reports />
             </Protected>
         )
     },

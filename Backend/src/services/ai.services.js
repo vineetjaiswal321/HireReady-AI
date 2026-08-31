@@ -7,6 +7,7 @@ const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
 });
 
+
 const interviewReportSchema = z.object({
     matchScore: z.number()
         .min(0)
@@ -207,9 +208,13 @@ const generatePdfFromHtml = async (htmlContent) => {
             waitUntil: "networkidle0"
         });
 
+        await page.emulateMediaType("print");
+
         const pdfBuffer = await page.pdf({
             format: "A4",
             printBackground: true,
+            displayHeaderFooter: false,
+            scale:1,
             margin: {
                 top: "15mm",
                 bottom: "15mm",
@@ -230,91 +235,109 @@ const generatePdfFromHtml = async (htmlContent) => {
 const generateResumePDF = async ({
     resume,
     selfDescription,
-    jobDescription
+    jobDescription,
+    profile
 }) => {
 
     const resumePdfSchema = z.object({
         html: z.string().describe(
-            "The HTML content of the resume which can be converted to PDF using a library like Puppeteer"
+            "Complete HTML document containing the ATS-friendly resume"
         )
     });
 
-    const prompt = `
-        You are an expert resume writer and ATS resume designer.
+const prompt = `
+You are an expert resume writer and HTML/CSS engineer. Generate a complete, ATS-friendly, ONE-PAGE resume as a single self-contained HTML document. The VISUAL DESIGN must replicate the exact layout style described below. Content should be tailored to the job description using only facts from the resume/profile — never invented.
 
-        Create a professional, ATS-friendly resume tailored specifically
-        to the provided job description.
+=== INPUT DATA ===
 
-        SOURCE RESUME:
-        ${resume}
+--- EXISTING RESUME (source of truth for facts, links, structure) ---
+${resume}
 
-        SELF DESCRIPTION:
-        ${selfDescription}
+--- CANDIDATE SELF DESCRIPTION (tone reference for summary only, do not copy verbatim) ---
+${selfDescription}
 
-        JOB DESCRIPTION:
-        ${jobDescription}
+--- TARGET JOB DESCRIPTION (tailor emphasis/keywords to this, never fabricate) ---
+${jobDescription}
 
-        Rules:
+--- STRUCTURED PROFILE DATA (JSON — authoritative for contact info, links, education, skills) ---
+${JSON.stringify(profile)}
 
-        1. Use ONLY information present in the source resume and
-        self-description.
+=== EXACT VISUAL DESIGN SPEC ===
 
-        2. Never invent or fabricate personal information, experience,
-        projects, education, skills, achievements, certifications,
-        links, dates, or metrics.
+1. HEADER
+   - Full name, centered, ALL CAPS, bold, 22-24px, slight letter-spacing.
+   - Directly below: one centered line — phone | email | LinkedIn | GitHub | location — separated by " | ". Each that exists as a real link renders as a clickable <a>; otherwise plain text. 10.5-11px, not bold.
+   - Thin horizontal rule (1px, dark gray/black) directly under this line, full width.
 
-        3. If information is unavailable, omit that field instead of
-        creating placeholder information.
+2. SECTION HEADERS
+   - ALL CAPS, bold, 13-14px, single consistent accent color (e.g. #1a3d5c) for every header.
+   - Thin bottom border (1px solid) under each header, full content width.
+   - Order: PROFESSIONAL SUMMARY → EDUCATION → TECHNICAL SKILLS → PROJECTS → ACHIEVEMENTS → CERTIFICATIONS. Skip sections with no content — no placeholders.
+   - Slightly more space above each header than below it, matching a dense single-page CV rhythm.
 
-        4. Preserve the candidate's real identity and contact information.
+3. EDUCATION BLOCK
+   - Institution name (bold), city/location right-aligned on the same line (flex row).
+   - Degree name on next line, left; "CGPA: X | Expected: Month Year" right-aligned on the same line (flex row).
 
-        5. Tailor the professional summary toward the target job.
+4. TECHNICAL SKILLS
+   - One line per category: "Category Name: " bold, then comma-separated plain-text skills. No bullet dots, just stacked lines.
 
-        6. Prioritize skills that are actually present in the candidate's
-        resume and relevant to the job description.
+5. PROJECTS
+   - Project title bold, followed by an italic/gray tag (hackathon name, "Personal Project, Year") on the same line.
+   - If a real GitHub/live link exists in source data, make the title itself a clickable <a> (accent color, no underline) or add a small inline "[GitHub]" link — whichever the source data supports.
+   - Bullets (•) below, action-verb led, tight spacing.
+   - Final line per project: "Tech: " bold/italic, then comma-separated stack, slightly gray (#333).
 
-        7. Rewrite project descriptions using strong action-oriented
-        language while preserving the original facts.
+6. ACHIEVEMENTS / CERTIFICATIONS
+   - Simple bullet (•) list, one line per item where possible.
 
-        8. Do not claim that the candidate has experience with a technology
-        merely because it appears in the job description.
+7. GLOBAL STYLING
+   - Font: clean system sans-serif stack ("Arial, Helvetica, sans-serif") only — no external/Google fonts (network calls fail during PDF render).
+   - Body text color #1a1a1a. One accent color only (e.g. #1a3d5c) for headers, borders, and all links — no default blue, no underline on links.
+   - Compact but READABLE — small section gaps, not small text (see FONT SIZE RULES below, which override any "dense" instinct).
+   - No icons, no images, no tables-for-layout — semantic HTML only (<header>, <section>, <h1>, <h2>, <ul><li>, <a>, flex rows for right-aligned date/location pattern).
 
-        9. Use an ATS-friendly structure:
+=== FONT SIZE RULES (STRICT) ===
+- Body text (bullets, skills lines, project descriptions): 11.5px minimum, 12px preferred. NEVER below 11px.
+- Name: 24-28px bold.
+- Section headers: 16-17px bold uppercase.
+- Contact/links line: 12.5-13px minimum.
+- "Tech:" lines and project tags/dates: 12.5px minimum.
+- Line-height for body text: 1.4-1.45 minimum (never tighter than 1.3 even when compressing).
+- Define sizes in a way that keeps them consistent (e.g. body { font-size: 13.5px; } with headers/name sized relative to it) — do not let bullet text silently shrink smaller than everything else.
 
-        NAME
-        Contact Information
+=== FITTING ON ONE PAGE — PRIORITY ORDER ===
+If content overflows one A4 page, fix it IN THIS ORDER — do not skip ahead:
+1. Reduce vertical margin/padding between sections (14px → 10px → 8px).
+2. Reduce line-height slightly (1.45 → 1.35, never below 1.3).
+3. Tighten spacing between bullet <li> items.
+4. Trim to the most relevant/impactful bullets per project (max 3-4 per project) rather than keeping everything.
+5. ONLY as an absolute last resort, reduce body font by half a point (11.5px → 11px). Never below 11px.
+Font size is NEVER sacrificed to fit more content. Fewer, sharper bullets at readable size beats a cramped tiny-font resume.
 
-        PROFESSIONAL SUMMARY
+=== LINKS RULE ===
+- Scan resume text + profile JSON for: GitHub, LinkedIn, LeetCode, GeeksforGeeks/GFG, HackerRank, Codeforces, portfolio site, email, phone.
+- Every link that genuinely exists becomes a real <a href="FULL_URL" target="_blank" rel="noopener">Label</a>. Email → mailto:, phone → tel:.
+- If only a handle exists (no full URL), construct the standard profile URL ONLY if the platform is unambiguous (github.com/username, linkedin.com/in/username, leetcode.com/username, geeksforgeeks.org/user/username). Otherwise leave as plain text.
+- NEVER fabricate a link with no basis in source data.
+- All links use the single accent color, no underline.
 
-        TECHNICAL SKILLS
+=== CONTENT RULES ===
+1. Never invent employers, dates, metrics, or skills. Rephrase/reorder existing content only to match the job description.
+2. Professional Summary: 2-3 sentences, professional tone (no "I"), informed by self description but not copied verbatim.
+3. Prioritize skills/bullets most relevant to the job description first within each section.
+4. Weave in exact job-description keywords only where truthfully supported by source data.
+5. Quantify bullets only where source data already has numbers — never add new ones.
 
-        EXPERIENCE
-        (only if experience exists)
+=== HTML/CSS OUTPUT RULES (Puppeteer PDF constraints) ===
+1. Return ONE complete HTML document: <!DOCTYPE html>, <html>, <head> with a single inline <style> block. No external stylesheets/fonts.
+2. Do NOT add margin/padding to <html> or <body> — the PDF renderer already applies 15mm margins on all sides.
+3. Add "page-break-inside: avoid;" on each <section>.
+4. Text must remain real, selectable HTML text (not images) for ATS parsing.
 
-        PROJECTS
-        (only if projects exist)
-
-        EDUCATION
-
-        CERTIFICATIONS / ACHIEVEMENTS
-        (only if present)
-
-        10. Keep the resume concise and professional, preferably 1 page
-            for an entry-level candidate.
-
-        11. Use clean HTML suitable for conversion to PDF.
-
-        12. Do not include markdown.
-
-        13. Do not include explanations outside the HTML.
-
-        Return JSON with exactly one field:
-
-        {
-        "html": "..."
-        }
-        `;
-
+=== OUTPUT FORMAT ===
+Return ONLY JSON matching the provided schema — the "html" field contains the full HTML document as a string. No markdown fences, no commentary outside the JSON.
+`;
     const response = await ai.models.generateContent({
         model: "gemini-3.5-flash-lite",
         contents: prompt,
@@ -325,6 +348,12 @@ const generateResumePDF = async ({
     });
 
     const jsonContent = JSON.parse(response.text);
+
+    if (!jsonContent.html) {
+        throw new Error(
+            "AI failed to generate resume HTML"
+        );
+    }
 
     const pdfBuffer=await generatePdfFromHtml(jsonContent.html)
 

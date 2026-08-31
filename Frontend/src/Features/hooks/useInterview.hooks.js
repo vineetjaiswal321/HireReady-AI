@@ -4,7 +4,8 @@ import {
     generateInterviewReport,
     getInterviewReportById,
     getAllInterviewReports,
-    downloadResumePDF
+    downloadResumePDF,
+    deleteReport
 } from "../interview/services/interview.api.js";
 
 import { InterviewContext } from "../interview/interview.context.jsx";
@@ -127,6 +128,19 @@ export const useInterview = () => {
         }
     };
 
+    const handleDeleteReport=async (reportId)=>{
+        try {
+            await deleteReport(reportId);
+            setReports((prev)=>
+            prev.filter(
+                (report)=>report._id !== reportId
+            ));
+
+        } catch (error) {
+            console.log(error)
+            throw error
+        }
+    }
 
     // Download Resume PDF
     const generateResume = async (interviewReportId) => {
@@ -169,6 +183,7 @@ export const useInterview = () => {
         generateReport,
         getReportById,
         getAllReports,
-        generateResume
+        generateResume,
+        handleDeleteReport,
     };
 };
