@@ -4,6 +4,7 @@ import {
     generateInterviewReport,
     getInterviewReportById,
     getAllInterviewReports,
+    generateResumePDF,
     downloadResumePDF,
     deleteReport
 } from "../interview/services/interview.api.js";
@@ -144,12 +145,24 @@ export const useInterview = () => {
 
     // Download Resume PDF
     const generateResume = async (interviewReportId) => {
-
         setLoading(true);
 
         try {
 
-            await downloadResumePDF(interviewReportId);
+            const response = await generateResumePDF(
+                interviewReportId
+            );
+
+            // Update current report with PDF information
+            setReport(prev => ({
+                ...prev,
+                pdf: {
+                    url: response.pdfUrl,
+                    generatedAt: response.generatedAt
+                }
+            }));
+
+            return response;
 
         } catch (error) {
 
@@ -168,6 +181,25 @@ export const useInterview = () => {
     };
 
 
+    const downloadResume = async (interviewReportId, pdfUrl) => {
+        try {
+
+            await downloadResumePDF(
+                pdfUrl,
+                interviewReportId
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Resume PDF download error:",
+                error
+            );
+
+            throw error;
+        }
+    };
+
     // Load all reports
     useEffect(() => {
 
@@ -184,6 +216,7 @@ export const useInterview = () => {
         getReportById,
         getAllReports,
         generateResume,
+        downloadResume,
         handleDeleteReport,
     };
 };

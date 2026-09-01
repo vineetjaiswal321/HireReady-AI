@@ -35,14 +35,18 @@ const InterviewStrategy = () => {
   const {
         report,
         loading,
-        getReportById
-  } = useInterview();
+        getReportById,
+        generateResume,
+        downloadResume
+    } = useInterview();
 
 
   const [activeTab, setActiveTab] = useState("overview");
   const [openQuestion, setOpenQuestion] = useState(null);
   const [completedDays, setCompletedDays] = useState([]);
+    const [showPdfPreview, setShowPdfPreview] = useState(false);
 
+    
     useEffect(() => {
 
         if (!interviewId) return;
@@ -55,25 +59,31 @@ const InterviewStrategy = () => {
 
 
   if (loading) {
-      return (
-          <div className="min-h-screen bg-[#08080d] text-white flex items-center justify-center">
-              <div className="text-center">
-                  <Loader2
-                      size={40}
-                      className="animate-spin mx-auto mb-4"
-                  />
+    return (
+        <div className="min-h-screen bg-[#08080d] text-white flex items-center justify-center">
+            <div className="text-center">
 
-                  <h2 className="text-xl font-semibold">
-                      Preparing your interview strategy...
-                  </h2>
+                <Loader2
+                    size={40}
+                    className="animate-spin mx-auto mb-4 text-violet-400"
+                />
 
-                  <p className="text-zinc-400 mt-2">
-                      Analyzing your resume and target role
-                  </p>
-              </div>
-          </div>
-      );
-  }
+                <h2 className="text-xl font-semibold">
+                    Generating Your Resume PDF ......
+                </h2>
+
+                <p className="text-zinc-400 mt-2">
+                    Creating and securely saving your resume
+                </p>
+
+                <p className="text-zinc-500 text-sm mt-1">
+                    This may take a few seconds
+                </p>
+
+            </div>
+        </div>
+    );
+}
   
 
   const toggleDay = (day) => {
@@ -114,6 +124,25 @@ const InterviewStrategy = () => {
         </div>
     );
   }
+
+    const handleGeneratePDF = async () => {
+        try {
+            await generateResume(report._id);
+        } catch (error) {
+            console.error("Failed to generate PDF:", error);
+        }
+    };
+
+    const handleDownloadPDF = async () => {
+        try {
+            await downloadResume(
+                report._id,
+                report.pdf.url
+            );
+        } catch (error) {
+            console.error("Failed to download PDF:", error);
+        }
+    };
   return (
     <div className="min-h-screen bg-[#08080d] text-white">
 
@@ -186,6 +215,72 @@ const InterviewStrategy = () => {
                         </div>
 
                     </div>
+                </div>
+
+            {/* Pdf section ddownload */}
+                {/* ================= PDF REPORT ================= */}
+                <div className="mt-6">
+
+                    {!report?.pdf?.url ? (
+
+                        <button
+                            onClick={handleGeneratePDF}
+                            disabled={loading}
+                            className="
+                                flex items-center justify-center gap-2
+                                px-5 py-3
+                                rounded-xl
+                                bg-violet-600
+                                hover:bg-violet-500
+                                disabled:opacity-50
+                                disabled:cursor-not-allowed
+                                text-white
+                                font-medium
+                                transition
+                            "
+                        >
+                            {loading ? (
+                                "Generating PDF..."
+                            ) : (
+                                "Generate Resume PDF"
+                            )}
+                        </button>
+
+                    ) : (
+
+                        <div className="flex items-center gap-3">
+
+                            <button
+                                onClick={() => setShowPdfPreview(true)}
+                                className="
+                                    px-5 py-3
+                                    rounded-xl
+                                    border border-white/10
+                                    bg-white/[0.05]
+                                    hover:bg-white/[0.1]
+                                    text-white
+                                    transition
+                                "
+                            >
+                                View PDF
+                            </button>
+
+                            <button
+                                onClick={handleDownloadPDF}
+                                className="
+                                    px-5 py-3
+                                    rounded-xl
+                                    bg-violet-600
+                                    hover:bg-violet-500
+                                    text-white
+                                    transition
+                                "
+                            >
+                                Download PDF
+                            </button>
+
+                        </div>
+                    )}
 
                 </div>
 
@@ -826,8 +921,51 @@ const InterviewStrategy = () => {
 
                 </section>
 
-            )}
+                        )}
 
+                        {showPdfPreview && (
+                <div className="
+                    fixed inset-0 z-50
+                    bg-black/80
+                    flex items-center justify-center
+                    p-4
+                ">
+
+                    <div className="
+                        relative
+                        w-full
+                        max-w-5xl
+                        h-[90vh]
+                        bg-zinc-900
+                        rounded-2xl
+                        overflow-hidden
+                        border border-white/10
+                    ">
+
+                        <button
+                            onClick={() => setShowPdfPreview(false)}
+                            className="
+                                absolute right-4 top-4 z-10
+                                w-10 h-10
+                                rounded-full
+                                bg-black/70
+                                text-white
+                                hover:bg-black
+                            "
+                        >
+                            ✕
+                        </button>
+
+                        <iframe
+                            src={report.pdf.url}
+                            title="Resume PDF Preview"
+                            className="w-full h-full"
+                        />
+
+                    </div>
+
+                </div>
+            )}
         </main>
 
     </div>

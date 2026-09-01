@@ -35,6 +35,8 @@ const Reports = () => {
     const [deleteReportId, setDeleteReportId] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
+    const [selectedPdf, setSelectedPdf] = useState(null);
+
     const filteredReports = useMemo(() => {
         return reports.filter((report) => {
             const title = report.title?.toLowerCase() || "";
@@ -297,14 +299,122 @@ const Reports = () => {
                                 formatDate={formatDate}
                                 getScoreLabel={getScoreLabel}
                                 onView={() => navigate(`/interview/${report._id}`)}
-                                onDownload={generateResume}
+                                setSelectedPdf={setSelectedPdf}
                                 onDelete={() => setDeleteReportId(report._id)}
                             />
                         ))}
                     </div>
                 )}
+
+                          {selectedPdf && (
+            <div
+                className="
+                    fixed inset-0 z-50
+                    bg-black/80
+                    backdrop-blur-sm
+                    flex items-center justify-center
+                    p-4
+                "
+                onClick={() => setSelectedPdf(null)}
+            >
+
+                <div
+                    className="
+                        relative
+                        w-full
+                        max-w-5xl
+                        h-[90vh]
+                        bg-zinc-900
+                        rounded-2xl
+                        overflow-hidden
+                        border border-white/10
+                        shadow-2xl
+                    "
+                    onClick={(e) => e.stopPropagation()}
+                >
+
+                    {/* Header */}
+                    <div className="
+                        h-16
+                        px-5
+                        flex items-center justify-between
+                        border-b border-white/10
+                        bg-zinc-950
+                    ">
+
+                        <h2 className="
+                            text-white
+                            font-semibold
+                        ">
+                            Resume Preview
+                        </h2>
+
+
+                        <div className="flex items-center gap-3">
+
+                            {/* Download */}
+                            <a
+                                href={selectedPdf}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="
+                                    px-4 py-2
+                                    rounded-xl
+                                    bg-violet-500
+                                    hover:bg-violet-600
+                                    text-white
+                                    text-sm
+                                    font-medium
+                                    transition
+                                "
+                            >
+                                Download PDF
+                            </a>
+
+
+                            {/* Close */}
+                            <button
+                                onClick={() => setSelectedPdf(null)}
+                                className="
+                                    w-10 h-10
+                                    rounded-xl
+                                    bg-white/5
+                                    hover:bg-white/10
+                                    text-zinc-300
+                                    hover:text-white
+                                    transition
+                                "
+                            >
+                                ✕
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* PDF */}
+                    <iframe
+                        src={selectedPdf}
+                        title="Resume PDF Preview"
+                        className="
+                            w-full
+                            h-[calc(90vh-4rem)]
+                            bg-white
+                        "
+                    />
+
+                </div>
+
+            </div>
+        )}
             </main>
         </PageShell>
+    
+  
+                
+
     );
 };
 
@@ -325,7 +435,7 @@ const StatCard = ({ icon, label, value, description }) => {
     );
 };
 
-const ReportCard = ({ report, formatDate, getScoreLabel, onView, onDownload, onDelete }) => {
+const ReportCard = ({ report, formatDate, getScoreLabel, onView, setSelectedPdf , onDelete }) => {
     const score = report.matchScore || 0;
 
     return (
@@ -382,13 +492,22 @@ const ReportCard = ({ report, formatDate, getScoreLabel, onView, onDownload, onD
                         <ArrowRight size={15} />
                     </button>
 
+                    {report.pdf?.url && (
                     <button
-                        onClick={() => onDownload(report._id)}
-                        className="flex h-11 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                        onClick={() => setSelectedPdf(report.pdf.url)}
+                        className="
+                            px-4 py-2
+                            rounded-xl
+                            bg-violet-500/10
+                            border border-violet-500/20
+                            text-violet-400
+                            hover:bg-violet-500/20
+                            transition
+                        "
                     >
-                        <Download size={15} />
-                        PDF
+                        View PDF
                     </button>
+                )}
 
                     <button
                         onClick={onDelete}

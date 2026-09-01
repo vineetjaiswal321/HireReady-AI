@@ -67,22 +67,24 @@ export const getAllInterviewReports = async () => {
 // Download Resume PDF
 // ======================================================
 
-export const downloadResumePDF = async (interviewReportId) => {
+export const generateResumePDF = async (interviewReportId) => {
 
     const response = await api.post(
-        `/api/interview/resume/pdf/${interviewReportId}`,
-        null,
-        {
-            responseType: "blob"
-        }
+        `/api/interview/resume/pdf/${interviewReportId}`
     );
 
-    const blob = new Blob(
-        [response.data],
-        {
-            type: "application/pdf"
-        }
-    );
+    return response.data;
+};
+
+export const downloadResumePDF = async (pdfUrl, interviewReportId) => {
+
+    const response = await fetch(pdfUrl);
+
+    if (!response.ok) {
+        throw new Error("Failed to download PDF");
+    }
+
+    const blob = await response.blob();
 
     const url = window.URL.createObjectURL(blob);
 
@@ -99,7 +101,6 @@ export const downloadResumePDF = async (interviewReportId) => {
 
     window.URL.revokeObjectURL(url);
 };
-
 
 export const deleteReport=async (reportId)=>{
     const response=await api.delete(

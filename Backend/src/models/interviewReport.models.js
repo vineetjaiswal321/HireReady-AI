@@ -97,6 +97,22 @@ const interviewReportSchema=new mongoose.Schema({
     title: {
         type : String,
         required : true
+    },
+    pdf: {
+        url: {
+            type: String,
+            default: null
+        },
+
+        publicId: {
+            type: String,
+            default: null
+        },
+
+        generatedAt: {
+            type: Date,
+            default: null
+        }
     }
 
 }, {timestamps : true})

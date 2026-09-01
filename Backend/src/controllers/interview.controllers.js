@@ -6,6 +6,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import ApiError from "../utils/ApiError.js";
 import {User} from "../models/user.models.js"
+import { uploadPDFToCloudinary } from "../utils/cloudinary.js";
+
 
 const generateInterviewReportController = asyncHandler(async (req, res) => {
 
@@ -128,6 +130,15 @@ const generateResumePdfController=asyncHandler(async (req, res)=>{
         throw new ApiError(404, "Interview Report not found")
     }
 
+    if (interviewReport.pdf?.url) {
+        return res.status(200).json({
+            success: true,
+            pdfUrl: interviewReport.pdf.url,
+            generatedAt: interviewReport.pdf.generatedAt,
+            alreadyGenerated: true
+        });
+    }
+
     const {resume, jobDescription, selfDescription}=interviewReport
 
     const user=await User.findById(req.user.id).select("-password")
@@ -166,13 +177,30 @@ const generateResumePdfController=asyncHandler(async (req, res)=>{
 
     const pdfBuffer=await generateResumePDF({resume, jobDescription, selfDescription, profile})
 
-    res.set({
-        "Content-Type": "application/pdf",
-        "Content-Disposition" : `attachment; filename=resume_${interviewReportId}.pdf`
-    })
+    console.log("PDF generated, buffer size:", pdfBuffer.length);
 
-    res.send(pdfBuffer);
+    const publicId=`result_${interviewReportId}`;
+    
+    console.log("Uploading to Cloudinary:", publicId);
 
+    const cloudinaryResult=await uploadPDFToCloudinary(pdfBuffer, publicId)
+
+    console.log("Cloudinary result:", cloudinaryResult);
+
+    interviewReport.pdf = {
+        url: cloudinaryResult.secure_url,
+        storageKey: cloudinaryResult.public_id,
+        generatedAt: new Date()
+    };
+
+    await interviewReport.save();
+
+    return res.status(200).json({
+        success: true,
+        pdfUrl: cloudinaryResult.secure_url,
+        generatedAt: interviewReport.pdf.generatedAt,
+        alreadyGenerated: false
+    });
 })
 
 
