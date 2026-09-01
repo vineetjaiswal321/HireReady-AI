@@ -45,7 +45,7 @@ const userSchema=new mongoose.Schema({
         geeksforgeeks: String,
         codechef: String,
         codeforces: String,
-        hackerrank: String
+        codingninjas: String
     },
     skills: {
         languages: [String],

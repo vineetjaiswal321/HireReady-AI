@@ -6,7 +6,8 @@ import {
     getAllInterviewReports,
     generateResumePDF,
     downloadResumePDF,
-    deleteReport
+    deleteReport,
+    evaluateMockAnswer
 } from "../interview/services/interview.api.js";
 
 import { InterviewContext } from "../interview/interview.context.jsx";
@@ -200,12 +201,48 @@ export const useInterview = () => {
         }
     };
 
+
     // Load all reports
     useEffect(() => {
 
         getAllReports();
 
     }, []);
+
+
+
+    const evaluateAnswer = async ({
+        mockInterviewId,
+        question,
+        answer
+    }) => {
+
+        try {
+
+            setLoading(true);
+
+            const response = await evaluateMockAnswer({
+                mockInterviewId,
+                question,
+                answer
+            });
+
+            return response;
+
+        } catch (error) {
+
+            console.error(
+                "Answer evaluation error:",
+                error
+            );
+
+            throw error;
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
 
 
     return {
@@ -218,5 +255,6 @@ export const useInterview = () => {
         generateResume,
         downloadResume,
         handleDeleteReport,
+        evaluateAnswer
     };
 };

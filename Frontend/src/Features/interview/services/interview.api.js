@@ -108,3 +108,61 @@ export const deleteReport=async (reportId)=>{
     )
     return response.data;
 }
+
+
+export const evaluateMockAnswer = async ({
+    mockInterviewId,
+    question,
+    answer
+}) => {
+
+    console.log("API EVALUATE PAYLOAD:", {
+        mockInterviewId,
+        question,
+        answer
+    });
+
+    const response = await api.post(
+        "/api/interview/mock/evaluate",
+        {
+            mockInterviewId,
+            question,
+            answer
+        }
+    );
+
+    return response.data;
+};
+
+export const startMockInterview = async (
+    interviewReportId
+) => {
+
+    const response = await api.post(
+        "/api/interview/mock/start",
+        {
+            interviewReportId
+        }
+    );
+
+    return response.data;
+};
+
+
+export const getMockInterviewById = async (mockInterviewId) => {
+
+    const response = await api.get(
+        `/api/interview/mock/${mockInterviewId}`
+    );
+
+    return response.data;
+};
+
+export const getMyMockInterviews = async () => {
+
+    const response = await api.get(
+        "/api/interview/mock"
+    );
+
+    return response.data;
+};

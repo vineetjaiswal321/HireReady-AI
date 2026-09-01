@@ -24,8 +24,8 @@ import {
     Zap,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useInterview } from "../../hooks/useInterview.hooks";
-
+import { useInterview } from "../../hooks/useInterview.hooks.js";
+import { startMockInterview } from "../services/interview.api.js";
 
 const InterviewStrategy = () => {
   const navigate = useNavigate();
@@ -198,7 +198,7 @@ const InterviewStrategy = () => {
 
                     </div>
 
-
+                <div className="relative flex flex-col items-center">
                     {/* Match Score */}
                     <div className="relative">
 
@@ -214,7 +214,90 @@ const InterviewStrategy = () => {
 
                         </div>
 
+                    
                     </div>
+
+                    {/* Mock Interview CTA */}
+                    <div className="mt-5 flex flex-col items-center">
+
+                        <button
+    onClick={async () => {
+
+        try {
+
+            const response =
+                await startMockInterview(
+                    interviewId
+                );
+
+            const mockInterviewId =
+                response.data.mockInterviewId;
+
+            navigate(
+                `/mock-interview/${mockInterviewId}`
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to start mock interview:",
+                error
+            );
+
+        }
+    }}
+    className="
+        group
+        inline-flex
+        items-center
+        gap-2.5
+        rounded-xl
+        bg-gradient-to-r
+        from-indigo-600
+        to-violet-600
+        px-5
+        py-3
+        text-sm
+        font-semibold
+        text-white
+        shadow-md
+        shadow-indigo-500/20
+        transition-all
+        duration-200
+        hover:-translate-y-0.5
+        hover:shadow-lg
+        hover:shadow-indigo-500/30
+    "
+>
+    <span>Start Mock Interview</span>
+
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="
+            h-4
+            w-4
+            transition-transform
+            duration-200
+            group-hover:translate-x-1
+        "
+    >
+        <path
+            fillRule="evenodd"
+            d="M3 10a.75.75 0 0 1 .75-.75h11.19l-3.22-3.22a.75.75 0 1 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1 0 1.06l3.22-3.22H3.75A.75.75 0 0 1 3 10Z"
+            clipRule="evenodd"
+        />
+    </svg>
+</button>
+
+                        <span className="text-xs text-zinc-500 mt-2">
+                            Practice with an AI-powered interview
+                        </span>
+
+                    </div>
+                </div>
+                    
                 </div>
 
             {/* Pdf section ddownload */}

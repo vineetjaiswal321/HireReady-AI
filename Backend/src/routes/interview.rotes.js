@@ -10,6 +10,13 @@ import {
     deleteReport
 } from "../controllers/interview.controllers.js";
 
+import { 
+    evaluateMockAnswerController, 
+    startMockInterviewController,
+    getMockInterviewByIdController,
+    getMyMockInterviewsController
+} from "../controllers/mockInterview.controllers.js";
+
 import upload from "../middlewares/file.middlewares.js";
 
 const interviewRouter = express.Router();
@@ -50,6 +57,32 @@ interviewRouter.delete(
     authUser,
     deleteReport
 );
+
+interviewRouter.post(
+    "/mock/evaluate",
+    authUser,
+    evaluateMockAnswerController
+);
+
+
+interviewRouter.post(
+    "/mock/start",
+    authUser,
+    startMockInterviewController
+);
+
+interviewRouter.get(
+    "/mock",
+    authUser,
+    getMyMockInterviewsController
+);
+
+interviewRouter.get(
+    "/mock/:mockInterviewId",
+    authUser,
+    getMockInterviewByIdController
+);
+
 
 
 export default interviewRouter;

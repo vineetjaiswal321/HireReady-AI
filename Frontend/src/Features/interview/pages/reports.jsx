@@ -13,6 +13,7 @@ import {
     Sparkles,
     SlidersHorizontal,
     Loader2,
+    MessageSquare
 } from "lucide-react";
 
 import { useInterview } from "../../hooks/useInterview.hooks.js";
@@ -155,6 +156,15 @@ const Reports = () => {
                         </p>
                     </div>
 
+                    <div className="flex flex-wrap items-center gap-3">
+                    <button
+                        onClick={() => navigate("/mock-interview-reports")}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-5 py-3 text-sm font-semibold text-violet-700 shadow-sm transition hover:bg-violet-100 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-400 dark:hover:bg-violet-500/15"
+                    >
+                        <MessageSquare size={16} />
+                        Mock Interview Reports
+                    </button>
+
                     <button
                         onClick={() => navigate("/")}
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500"
@@ -162,6 +172,7 @@ const Reports = () => {
                         <Sparkles size={16} />
                         New Interview
                     </button>
+                </div>
                 </div>
 
                 {deleteReportId && (

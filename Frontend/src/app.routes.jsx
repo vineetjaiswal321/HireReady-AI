@@ -8,6 +8,11 @@ import Reports from "./Features/interview/pages/reports.jsx"
 import Profile from "./Features/profile/pages/profile.jsx"
 import UpdateProfile from "./Features/profile/pages/updateProfile.jsx"
 import Settings from "./Features/settings/pages/settings.jsx"
+import MockInterview from "./Features/interview/pages/mockInterview.jsx"
+import InterviewResults from "./Features/interview/pages/interviewResults.jsx"
+import MockInterviewReports from "./Features/interview/pages/mockInterviewReports.jsx"
+
+
 
 export const router=createBrowserRouter([
     {
@@ -63,6 +68,30 @@ export const router=createBrowserRouter([
         element:(
             <Protected>
                 <Settings/>
+            </Protected>
+        )
+    },
+    {
+        path: "/mock-interview/:mockInterviewId",
+        element:(
+            <Protected>
+                <MockInterview/>
+            </Protected>
+        )
+    },
+    {
+        path: "/interview-results/:mockInterviewId",
+        element:(
+            <Protected>
+                <InterviewResults/>
+            </Protected>
+        )
+    },
+    {
+        path: "/mock-interview-reports",
+        element:(
+            <Protected>
+                <MockInterviewReports/>
             </Protected>
         )
     }

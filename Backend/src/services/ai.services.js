@@ -195,26 +195,83 @@ candidate's experience level.
 
 
 const generatePdfFromHtml = async (htmlContent) => {
-
     const browser = await puppeteer.launch({
         headless: true
     });
 
     try {
-
         const page = await browser.newPage();
 
+        // Set A4 viewport
+        await page.setViewport({
+            width: 794,
+            height: 1123,
+            deviceScaleFactor: 1
+        });
+
+        // Load generated HTML
         await page.setContent(htmlContent, {
             waitUntil: "networkidle0"
         });
 
         await page.emulateMediaType("print");
 
+        // Wait for fonts/images/layout to finish
+        await page.evaluate(async () => {
+            if (document.fonts) {
+                await document.fonts.ready;
+            }
+
+            const images = Array.from(document.images);
+
+            await Promise.all(
+                images.map((img) => {
+                    if (img.complete) return Promise.resolve();
+
+                    return new Promise((resolve) => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                })
+            );
+        });
+
+        // Force A4 page styling
+        await page.addStyleTag({
+            content: `
+                @page {
+                    size: A4;
+                    margin: 15mm;
+                }
+
+                html,
+                body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100%;
+                }
+
+                * {
+                    box-sizing: border-box;
+                }
+
+                section {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+            `
+        });
+
+        // Generate PDF
         const pdfBuffer = await page.pdf({
             format: "A4",
+
             printBackground: true,
+
             displayHeaderFooter: false,
-            scale:1,
+
+            preferCSSPageSize: false,
+
             margin: {
                 top: "15mm",
                 bottom: "15mm",
@@ -226,9 +283,7 @@ const generatePdfFromHtml = async (htmlContent) => {
         return pdfBuffer;
 
     } finally {
-
         await browser.close();
-
     }
 };
 
@@ -246,7 +301,7 @@ const generateResumePDF = async ({
     });
 
 const prompt = `
-You are an expert resume writer and HTML/CSS engineer. Generate a complete, ATS-friendly, ONE-PAGE resume as a single self-contained HTML document. The VISUAL DESIGN must replicate the exact layout style described below. Content should be tailored to the job description using only facts from the resume/profile — never invented.
+You are an expert resume writer and HTML/CSS engineer. Generate a complete, ATS-friendly, ONE-PAGE(Mandatory) resume as a single self-contained HTML document. The VISUAL DESIGN must replicate the exact layout style described below. Content should be tailored to the job description using only facts from the resume/profile — never invented.
 
 === INPUT DATA ===
 
@@ -265,12 +320,12 @@ ${JSON.stringify(profile)}
 === EXACT VISUAL DESIGN SPEC ===
 
 1. HEADER
-   - Full name, centered, ALL CAPS, bold, 22-24px, slight letter-spacing.
+   - Full name, centered, ALL CAPS, bold, 24-26px, slight letter-spacing.
    - Directly below: one centered line — phone | email | LinkedIn | GitHub | location — separated by " | ". Each that exists as a real link renders as a clickable <a>; otherwise plain text. 10.5-11px, not bold.
    - Thin horizontal rule (1px, dark gray/black) directly under this line, full width.
 
 2. SECTION HEADERS
-   - ALL CAPS, bold, 13-14px, single consistent accent color (e.g. #1a3d5c) for every header.
+   - ALL CAPS, bold, 14-15px, single consistent accent color (e.g. #1a3d5c) for every header.
    - Thin bottom border (1px solid) under each header, full content width.
    - Order: PROFESSIONAL SUMMARY → EDUCATION → TECHNICAL SKILLS → PROJECTS → ACHIEVEMENTS → CERTIFICATIONS. Skip sections with no content — no placeholders.
    - Slightly more space above each header than below it, matching a dense single-page CV rhythm.
@@ -287,6 +342,7 @@ ${JSON.stringify(profile)}
    - If a real GitHub/live link exists in source data, make the title itself a clickable <a> (accent color, no underline) or add a small inline "[GitHub]" link — whichever the source data supports.
    - Bullets (•) below, action-verb led, tight spacing.
    - Final line per project: "Tech: " bold/italic, then comma-separated stack, slightly gray (#333).
+   - Choose best 3 projects to showcase, max 4 bullets per project, prioritize relevance to job description.
 
 6. ACHIEVEMENTS / CERTIFICATIONS
    - Simple bullet (•) list, one line per item where possible.
@@ -300,8 +356,8 @@ ${JSON.stringify(profile)}
 === FONT SIZE RULES (STRICT) ===
 - Body text (bullets, skills lines, project descriptions): 11.5px minimum, 12px preferred. NEVER below 11px.
 - Name: 24-28px bold.
-- Section headers: 16-17px bold uppercase.
-- Contact/links line: 12.5-13px minimum.
+- Section headers: 18-19px bold uppercase.
+- Contact/links line: 13.5-14px minimum.
 - "Tech:" lines and project tags/dates: 12.5px minimum.
 - Line-height for body text: 1.4-1.45 minimum (never tighter than 1.3 even when compressing).
 - Define sizes in a way that keeps them consistent (e.g. body { font-size: 13.5px; } with headers/name sized relative to it) — do not let bullet text silently shrink smaller than everything else.
@@ -321,6 +377,7 @@ Font size is NEVER sacrificed to fit more content. Fewer, sharper bullets at rea
 - If only a handle exists (no full URL), construct the standard profile URL ONLY if the platform is unambiguous (github.com/username, linkedin.com/in/username, leetcode.com/username, geeksforgeeks.org/user/username). Otherwise leave as plain text.
 - NEVER fabricate a link with no basis in source data.
 - All links use the single accent color, no underline.
+- Add link of leetcode profile, gfg profile, coding ninjas profile, codeforces profile, hackerrank profile, portfolio site if they exist in the resume/profile data.(Mandatory) 
 
 === CONTENT RULES ===
 1. Never invent employers, dates, metrics, or skills. Rephrase/reorder existing content only to match the job description.
@@ -328,6 +385,8 @@ Font size is NEVER sacrificed to fit more content. Fewer, sharper bullets at rea
 3. Prioritize skills/bullets most relevant to the job description first within each section.
 4. Weave in exact job-description keywords only where truthfully supported by source data.
 5. Quantify bullets only where source data already has numbers — never add new ones.
+6. Shrink or remove bullets only if necessary to fit on one page, but never invent new content.(Necessory to fit on one page, but never invent new content.)
+7. Can reduce margin/padding between sections, line-height, and bullet spacing to fit on one page, but never reduce font size below 11px.(Mandatory)
 
 === HTML/CSS OUTPUT RULES (Puppeteer PDF constraints) ===
 1. Return ONE complete HTML document: <!DOCTYPE html>, <html>, <head> with a single inline <style> block. No external stylesheets/fonts.
@@ -362,7 +421,135 @@ Return ONLY JSON matching the provided schema — the "html" field contains the 
 };
 
 
+const evaluateMockAnswer = async ({
+    question,
+    answer,
+    experienceLevel,
+    interviewType
+}) => {
+
+
+    const mockAnswerEvaluationSchema = z.object({
+    score: z.number().min(0).max(100),
+
+    feedback: z.string(),
+
+    strengths: z
+        .array(z.string())
+        .min(1),
+
+    improvements: z
+        .array(z.string())
+        .min(1)
+
+    })
+
+    const prompt = `
+You are an expert technical interviewer and career coach.
+
+Evaluate the candidate's answer to the interview question.
+
+INTERVIEW TYPE:
+${interviewType}
+
+EXPERIENCE LEVEL:
+${experienceLevel}
+
+QUESTION:
+${question}
+
+CANDIDATE ANSWER:
+${answer}
+
+Evaluate the answer fairly and realistically.
+
+Consider:
+
+1. Accuracy
+   - Is the answer technically correct?
+   - Are there factual errors?
+
+2. Relevance
+   - Does the answer directly address the question?
+   - Does it avoid unnecessary information?
+
+3. Depth
+   - Does the answer demonstrate sufficient understanding
+     for the candidate's experience level?
+
+4. Clarity
+   - Is the explanation easy to understand?
+   - Is the response logically structured?
+
+5. Practical understanding
+   - Does the candidate provide examples,
+     use cases, trade-offs, or real-world reasoning
+     when appropriate?
+
+6. Interview quality
+   - Would this answer be considered strong
+     in a real interview?
+
+SCORING:
+
+90-100:
+Exceptional answer. Accurate, deep, clear, and interview-ready.
+
+75-89:
+Strong answer with only minor areas for improvement.
+
+60-74:
+Good understanding but has noticeable gaps.
+
+40-59:
+Partial understanding with significant weaknesses.
+
+0-39:
+Poor, incorrect, or largely incomplete answer.
+
+IMPORTANT:
+
+- Judge the answer according to the candidate's experience level.
+- Don't response as The candidate, but as an interviewer evaluating the answer, u can say You provided a good answer, but you could improve by...
+- (Important) Avoid using "The Candidate" in your feedback. Instead, use "You" to address the candidate directly.
+- Do not penalize a junior candidate for not giving
+  senior-level depth.
+- Do not invent information about the candidate.
+- Do not assume knowledge that is not present in the answer.
+- Give constructive and actionable feedback.
+- Identify the strongest aspects of the answer.
+- Identify the most important improvements.
+- Do not give generic feedback.
+
+Return only valid JSON matching the provided schema.
+`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash-lite",
+
+        contents: prompt,
+
+        config: {
+            responseMimeType: "application/json",
+
+            responseJsonSchema:
+                z.toJSONSchema(
+                    mockAnswerEvaluationSchema
+                )
+        }
+    });
+
+    const result =
+        mockAnswerEvaluationSchema.parse(
+            JSON.parse(response.text)
+        );
+
+    return result;
+};
+
+
 export {
     generateInterviewReport,
-    generateResumePDF
+    generateResumePDF,
+    evaluateMockAnswer
 };

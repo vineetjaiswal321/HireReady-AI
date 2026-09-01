@@ -45,7 +45,7 @@ const UpdateProfile = () => {
             geeksforgeeks: "",
             codechef: "",
             codeforces: "",
-            hackerrank: "",
+            codingninjas: "",
         },
 
         skills: {
@@ -88,7 +88,7 @@ const UpdateProfile = () => {
                     user.codingProfiles?.geeksforgeeks || "",
                 codechef: user.codingProfiles?.codechef || "",
                 codeforces: user.codingProfiles?.codeforces || "",
-                hackerrank: user.codingProfiles?.hackerrank || "",
+                codingninjas: user.codingProfiles?.codingninjas || "",
             },
 
             skills: {
@@ -872,11 +872,11 @@ const UpdateProfile = () => {
                                     />
 
                                     <Input
-                                        label="HackerRank"
-                                        name="hackerrank"
-                                        value={profile.codingProfiles.hackerrank}
+                                        label="Coding Ninjas"
+                                        name="codingninjas"
+                                        value={profile.codingProfiles.codingninjas}
                                         onChange={handleCodingChange}
-                                        placeholder="https://hackerrank.com/profile/username"
+                                        placeholder="https://codingninjas.com/profile/username"
                                     />
 
                                 </div>
