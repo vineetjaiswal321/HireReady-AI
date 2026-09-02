@@ -12,11 +12,6 @@ const userSchema=new mongoose.Schema({
         unique : true, 
         required : true 
     }, 
-
-    password : {
-        type :String,
-        required : true
-    },
     name : {
         type : String
     },
@@ -84,27 +79,27 @@ const userSchema=new mongoose.Schema({
         date: Date
     }],
     settings: {
-    // AI behaviour
+        // AI behaviour
         personalizedPreparation: {
             type: Boolean,
             default: true,
         },
-
+        
         aiSuggestions: {
             type: Boolean,
             default: true,
         },
-
+        
         adaptiveDifficulty: {
             type: Boolean,
             default: true,
         },
-
+        
         followUpQuestions: {
             type: Boolean,
             default: true,
         },
-
+        
         showHints: {
             type: Boolean,
             default: false,
@@ -114,35 +109,35 @@ const userSchema=new mongoose.Schema({
             type: Boolean,
             default: true,
         },
-
+        
         // Notifications
         interviewReminders: {
             type: Boolean,
             default: true,
         },
-
+        
         preparationReminders: {
             type: Boolean,
             default: true,
         },
-
+        
         jobRecommendations: {
             type: Boolean,
             default: true,
         },
-
+        
         profileSuggestions: {
             type: Boolean,
             default: true,
         },
-
+        
         // Privacy
         profileVisibility: {
             type: String,
             enum: ["Public", "Private"],
             default: "Private",
         },
-
+        
         showSocialLinks: {
             type: Boolean,
             default: true,
@@ -159,6 +154,21 @@ const userSchema=new mongoose.Schema({
             enum: ["Dark", "Light", "System"],
             default: "Dark",
         },
+    },
+    
+    password : {
+        type :String,
+        required : true
+    },
+
+    resetPasswordToken: {
+        type: String,
+        default: null
+    },
+
+    resetPasswordExpires: {
+        type: Date,
+        default: null
     },
 }, {timestamps : true});
 

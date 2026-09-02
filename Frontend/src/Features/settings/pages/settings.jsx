@@ -355,7 +355,7 @@ const Settings = () => {
                                 description="Keep your HireReady AI account and sessions secure."
                             >
                                 <SettingRow title="Password" description="Change your account password">
-                                    <SecondaryButton>Change Password</SecondaryButton>
+                                    <SecondaryButton onClick={() => navigate("/change-password")}>Change Password</SecondaryButton>
                                 </SettingRow>
 
                                 <SettingRow

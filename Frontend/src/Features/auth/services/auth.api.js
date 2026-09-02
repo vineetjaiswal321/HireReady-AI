@@ -55,3 +55,47 @@ export async function getMe() {
         throw error;
     }
 }
+
+export async function forgotPassword({ email }) {
+    try {
+        const response = await api.post("/api/auth/forgot-password", {
+            email,
+        });
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function resetPassword({ token, password }) {
+    try {
+        const response = await api.post(
+            `/api/auth/reset-password/${token}`,
+            {
+                password,
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+export async function changePassword({ currentPassword, newPassword }) {
+    try {
+        const response = await api.post(
+            "/api/auth/change-password",
+            {
+                currentPassword,
+                newPassword,
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

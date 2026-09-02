@@ -11,7 +11,9 @@ import Settings from "./Features/settings/pages/settings.jsx"
 import MockInterview from "./Features/interview/pages/mockInterview.jsx"
 import InterviewResults from "./Features/interview/pages/interviewResults.jsx"
 import MockInterviewReports from "./Features/interview/pages/mockInterviewReports.jsx"
-
+import ForgotPassword from "./Features/auth/pages/forgotPassword.jsx"
+import ResetPassword from "./Features/auth/pages/resetPassword.jsx"
+import ChangePassword from "./Features/auth/pages/changePassword.jsx"
 
 
 export const router=createBrowserRouter([
@@ -92,6 +94,22 @@ export const router=createBrowserRouter([
         element:(
             <Protected>
                 <MockInterviewReports/>
+            </Protected>
+        )
+    }, 
+    {
+        path: "/forgot-password",
+        element: <ForgotPassword/>
+    }, 
+    {
+        path: "/reset-password/:token",
+        element: <ResetPassword/>
+    },
+    {
+        path: "/change-password",
+        element: (
+            <Protected>
+                <ChangePassword/>
             </Protected>
         )
     }
