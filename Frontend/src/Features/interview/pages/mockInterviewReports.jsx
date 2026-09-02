@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { getMyMockInterviews } from "../services/interview.api.js";
+import PageShell from "../../layout/PageShell.jsx";
 
 const MockInterviewReports = () => {
     const navigate = useNavigate();
@@ -33,8 +34,6 @@ const MockInterviewReports = () => {
 
             setMockInterviews(response.data || []);
         } catch (error) {
-            console.error("Failed to fetch mock interviews:", error);
-
             setError(
                 error.response?.data?.message ||
                     "Failed to load mock interview reports"
@@ -66,8 +65,8 @@ const MockInterviewReports = () => {
 
     if (loading) {
         return (
-            <main className="min-h-screen bg-zinc-50 px-5 py-10 dark:bg-zinc-950 md:px-6">
-                <div className="mx-auto max-w-7xl">
+            <PageShell>
+                <div className="mx-auto max-w-7xl px-5 py-10 md:px-6">
                     <div className="mb-8 animate-pulse">
                         <div className="h-4 w-32 rounded bg-zinc-200 dark:bg-zinc-800" />
                         <div className="mt-4 h-9 w-72 rounded bg-zinc-200 dark:bg-zinc-800" />
@@ -83,14 +82,14 @@ const MockInterviewReports = () => {
                         ))}
                     </div>
                 </div>
-            </main>
+            </PageShell>
         );
     }
 
     if (error) {
         return (
-            <main className="min-h-screen bg-zinc-50 px-5 py-10 dark:bg-zinc-950 md:px-6">
-                <div className="mx-auto max-w-7xl">
+            <PageShell>
+                <div className="mx-auto max-w-7xl px-5 py-10 md:px-6">
                     <button
                         onClick={() => navigate("/reports")}
                         className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-zinc-600 transition hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
@@ -112,18 +111,12 @@ const MockInterviewReports = () => {
                         </button>
                     </div>
                 </div>
-            </main>
+            </PageShell>
         );
     }
 
     return (
-        <main className="relative min-h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-            {/* Background decoration */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
-                <div className="absolute -left-32 top-1/2 h-80 w-80 rounded-full bg-purple-500/5 blur-3xl" />
-            </div>
-
+        <PageShell>
             <div className="relative mx-auto max-w-7xl px-5 py-8 md:px-6 md:py-10">
                 {/* Back */}
                 <button
@@ -390,7 +383,8 @@ const MockInterviewReports = () => {
                     </div>
                 )}
             </div>
-        </main>
+        </PageShell>
+                
     );
 };
 

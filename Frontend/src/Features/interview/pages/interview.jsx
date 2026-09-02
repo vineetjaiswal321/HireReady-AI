@@ -2,30 +2,20 @@ import React, { useState, useEffect } from "react";
 import {
     ArrowLeft,
     Loader2,
-    ArrowRight,
-    BarChart3,
-    BrainCircuit,
     Briefcase,
     AlertTriangle,
-    BriefcaseBusiness,
-    Check,
     CheckCircle2,
     ChevronDown,
     Circle,
-    Code2,
-    FileText,
     MessageSquare,
-    Search,
-    Settings2,
-    ShieldCheck,
     Sparkles,
     Target,
     UserRound,
-    Zap,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useInterview } from "../../hooks/useInterview.hooks.js";
 import { startMockInterview } from "../services/interview.api.js";
+import PageShell from "../../layout/PageShell.jsx";
 
 const InterviewStrategy = () => {
   const navigate = useNavigate();
@@ -51,8 +41,6 @@ const InterviewStrategy = () => {
 
         if (!interviewId) return;
 
-        console.log("Interview ID:", interviewId);
-
         getReportById(interviewId);
 
     }, [interviewId]);
@@ -60,28 +48,30 @@ const InterviewStrategy = () => {
 
   if (loading) {
     return (
-        <div className="min-h-screen bg-[#08080d] text-white flex items-center justify-center">
+        <PageShell>
+            <div className="flex min-h-[70vh] items-center justify-center">
             <div className="text-center">
 
                 <Loader2
                     size={40}
-                    className="animate-spin mx-auto mb-4 text-violet-400"
+                    className="mx-auto mb-4 animate-spin text-violet-600 dark:text-violet-400"
                 />
 
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold text-zinc-950 dark:text-white">
                     Generating Your Resume PDF ......
                 </h2>
 
-                <p className="text-zinc-400 mt-2">
+                <p className="mt-2 text-zinc-600 dark:text-zinc-400">
                     Creating and securely saving your resume
                 </p>
 
-                <p className="text-zinc-500 text-sm mt-1">
+                <p className="mt-1 text-sm text-zinc-500">
                     This may take a few seconds
                 </p>
 
             </div>
-        </div>
+            </div>
+        </PageShell>
     );
 }
   
@@ -94,27 +84,24 @@ const InterviewStrategy = () => {
     );
   };
 
-  const toggleQuestion = (index) => {
-    setOpenQuestion(openQuestion === index ? null : index);
-  };
-
   if (!report) {
     return (
-        <div className="min-h-screen bg-[#08080d] text-white flex items-center justify-center">
+        <PageShell>
+        <div className="flex min-h-[70vh] items-center justify-center">
 
             <div className="text-center">
 
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-2xl font-semibold text-zinc-950 dark:text-white">
                     No interview strategy found
                 </h2>
 
-                <p className="text-zinc-400 mt-2 mb-6">
+                <p className="mb-6 mt-2 text-zinc-600 dark:text-zinc-400">
                     Generate an interview strategy first.
                 </p>
 
                 <button
                     onClick={() => navigate("/")}
-                    className="px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 transition"
+                    className="rounded-xl bg-violet-600 px-5 py-3 text-white transition hover:bg-violet-500"
                 >
                     Create Strategy
                 </button>
@@ -122,6 +109,7 @@ const InterviewStrategy = () => {
             </div>
 
         </div>
+        </PageShell>
     );
   }
 
@@ -129,7 +117,7 @@ const InterviewStrategy = () => {
         try {
             await generateResume(report._id);
         } catch (error) {
-            console.error("Failed to generate PDF:", error);
+            // PDF generation failed - user can retry
         }
     };
 
@@ -140,37 +128,21 @@ const InterviewStrategy = () => {
                 report.pdf.url
             );
         } catch (error) {
-            console.error("Failed to download PDF:", error);
+            // Download failed - user can retry
         }
     };
   return (
-    <div className="min-h-screen bg-[#08080d] text-white">
+    <PageShell>
 
-        {/* ================= HEADER ================= */}
-        <header className="border-b border-white/10 bg-[#0b0b12]/80 backdrop-blur-xl sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-
+        {/* ================= MAIN ================= */}
+        <main className="relative mx-auto max-w-7xl px-6 py-10">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-zinc-400 hover:text-white transition"
+                    className="mb-8 flex items-center gap-2 text-sm font-medium text-zinc-500 transition hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
                 >
                     <ArrowLeft size={18} />
                     Back
                 </button>
-
-                <div className="flex items-center gap-2">
-                    <BrainCircuit className="text-violet-400" size={24} />
-                    <span className="font-bold text-lg">
-                        HireReady AI
-                    </span>
-                </div>
-
-            </div>
-        </header>
-
-
-        {/* ================= MAIN ================= */}
-        <main className="max-w-7xl mx-auto px-6 py-10">
 
             {/* ================= HERO ================= */}
             <section className="mb-10">
@@ -179,19 +151,19 @@ const InterviewStrategy = () => {
 
                     <div>
 
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm mb-4">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">
                             <Sparkles size={14} />
                             AI Interview Strategy
                         </div>
 
-                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                        <h1 className="text-4xl font-semibold tracking-tight text-zinc-950 md:text-5xl dark:text-white">
                             Your Interview
-                            <span className="text-violet-400">
+                            <span className="text-violet-600 dark:text-violet-400">
                                 {" "}Strategy
                             </span>
                         </h1>
 
-                        <p className="text-zinc-400 mt-4 max-w-2xl">
+                        <p className="mt-4 max-w-2xl text-zinc-600 dark:text-zinc-400">
                             A personalized preparation plan generated from
                             your resume, experience and target job.
                         </p>
@@ -202,9 +174,9 @@ const InterviewStrategy = () => {
                     {/* Match Score */}
                     <div className="relative">
 
-                        <div className="w-36 h-36 rounded-3xl bg-gradient-to-br from-violet-500/20 to-indigo-500/10 border border-violet-500/20 flex flex-col items-center justify-center">
+                        <div className="flex h-36 w-36 flex-col items-center justify-center rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 dark:border-violet-500/20 dark:from-violet-500/20 dark:to-indigo-500/10">
 
-                            <span className="text-4xl font-bold text-white">
+                            <span className="text-4xl font-bold text-zinc-950 dark:text-white">
                                 {report.matchScore ?? 0}%
                             </span>
 
@@ -238,12 +210,7 @@ const InterviewStrategy = () => {
             );
 
         } catch (error) {
-
-            console.error(
-                "Failed to start mock interview:",
-                error
-            );
-
+            // Mock interview failed to start - user can retry
         }
     }}
     className="
@@ -338,10 +305,14 @@ const InterviewStrategy = () => {
                                 className="
                                     px-5 py-3
                                     rounded-xl
-                                    border border-white/10
-                                    bg-white/[0.05]
-                                    hover:bg-white/[0.1]
-                                    text-white
+                                    border border-zinc-200
+                                    bg-white
+                                    hover:bg-zinc-50
+                                    text-zinc-900
+                                    dark:border-white/10
+                                    dark:bg-white/[0.05]
+                                    dark:hover:bg-white/[0.1]
+                                    dark:text-white
                                     transition
                                 "
                             >
@@ -374,7 +345,7 @@ const InterviewStrategy = () => {
             <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
 
                 {/* Experience */}
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <div className="hr-card p-5">
 
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-2.5 rounded-xl bg-blue-500/10">
@@ -394,7 +365,7 @@ const InterviewStrategy = () => {
 
 
                 {/* Interview Type */}
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <div className="hr-card p-5">
 
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-2.5 rounded-xl bg-emerald-500/10">
@@ -414,7 +385,7 @@ const InterviewStrategy = () => {
 
 
                 {/* Job */}
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <div className="hr-card p-5">
 
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-2.5 rounded-xl bg-orange-500/10">
@@ -427,7 +398,7 @@ const InterviewStrategy = () => {
                     </div>
 
                     <p className="text-lg font-semibold">
-                        Full Stack Developer
+                        {report.targetRole || "Not specified"}
                     </p>
 
                 </div>
@@ -436,7 +407,7 @@ const InterviewStrategy = () => {
 
 
             {/* ================= TABS ================= */}
-            <div className="flex gap-2 border-b border-white/10 mb-8 overflow-x-auto">
+            <div className="mb-8 flex gap-2 overflow-x-auto border-b border-zinc-200 dark:border-white/10">
 
                 {[
                     ["overview", "Overview"],
@@ -451,8 +422,8 @@ const InterviewStrategy = () => {
                         onClick={() => setActiveTab(id)}
                         className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
                             activeTab === id
-                                ? "text-violet-400 border-violet-400"
-                                : "text-zinc-500 border-transparent hover:text-white"
+                                ? "border-violet-600 text-violet-700 dark:border-violet-400 dark:text-violet-400"
+                                : "border-transparent text-zinc-500 hover:text-zinc-950 dark:hover:text-white"
                         }`}
                     >
                         {label}
@@ -469,7 +440,7 @@ const InterviewStrategy = () => {
                 <div className="space-y-8">
 
                     {/* Summary */}
-                    <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+                    <section className="hr-card p-6 md:p-8">
 
                         <div className="flex items-center gap-3 mb-5">
 
@@ -492,7 +463,7 @@ const InterviewStrategy = () => {
 
                         </div>
 
-                        <p className="text-zinc-300 leading-7">
+                        <p className="leading-7 text-zinc-600 dark:text-zinc-300">
                             Your profile has been analyzed against the
                             target job description. Review the technical
                             questions, behavioral questions, skill gaps
@@ -528,7 +499,7 @@ const InterviewStrategy = () => {
 
                                     <div
                                         key={index}
-                                        className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+                                        className="hr-card p-5"
                                     >
 
                                         <div className="flex items-start justify-between gap-3">
@@ -563,7 +534,7 @@ const InterviewStrategy = () => {
                                         className="text-emerald-400"
                                     />
 
-                                    <p className="text-zinc-300">
+                                    <p className="text-zinc-600 dark:text-zinc-300">
                                         No major skill gaps were identified.
                                     </p>
 
@@ -589,7 +560,7 @@ const InterviewStrategy = () => {
                             Technical Questions
                         </h2>
 
-                        <p className="text-zinc-400 mt-2">
+                        <p className="mt-2 text-zinc-600 dark:text-zinc-400">
                             Questions likely to be asked based on your
                             target role.
                         </p>
@@ -607,7 +578,7 @@ const InterviewStrategy = () => {
                                 return (
                                     <div
                                         key={index}
-                                        className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden"
+                                        className="hr-card overflow-hidden"
                                     >
 
                                         <button
@@ -665,7 +636,7 @@ const InterviewStrategy = () => {
                                                         How to Answer
                                                     </p>
 
-                                                    <p className="text-zinc-300 leading-6">
+                                                    <p className="text-zinc-600 dark:text-zinc-300 leading-6">
                                                         {item.answer}
                                                     </p>
 
@@ -697,7 +668,7 @@ const InterviewStrategy = () => {
                             Behavioral Questions
                         </h2>
 
-                        <p className="text-zinc-400 mt-2">
+                        <p className="mt-2 text-zinc-600 dark:text-zinc-400">
                             Prepare strong answers using the STAR method.
                         </p>
 
@@ -716,7 +687,7 @@ const InterviewStrategy = () => {
 
                                     <div
                                         key={index}
-                                        className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden"
+                                        className="hr-card overflow-hidden"
                                     >
 
                                         <button
@@ -776,7 +747,7 @@ const InterviewStrategy = () => {
                                                         How to Answer
                                                     </p>
 
-                                                    <p className="text-zinc-300 leading-6">
+                                                    <p className="text-zinc-600 dark:text-zinc-300 leading-6">
                                                         {item.answer}
                                                     </p>
 
@@ -809,7 +780,7 @@ const InterviewStrategy = () => {
                             Skill Gaps
                         </h2>
 
-                        <p className="text-zinc-400 mt-2">
+                        <p className="mt-2 text-zinc-600 dark:text-zinc-400">
                             Skills you should improve before the interview.
                         </p>
 
@@ -824,7 +795,7 @@ const InterviewStrategy = () => {
 
                                 <div
                                     key={index}
-                                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+                                    className="hr-card p-6"
                                 >
 
                                     <div className="flex justify-between items-center mb-5">
@@ -871,7 +842,7 @@ const InterviewStrategy = () => {
                                     Great job!
                                 </h3>
 
-                                <p className="text-zinc-400 mt-2">
+                                <p className="mt-2 text-zinc-600 dark:text-zinc-400">
                                     No significant skill gaps were detected.
                                 </p>
 
@@ -896,7 +867,7 @@ const InterviewStrategy = () => {
                             Preparation Plan
                         </h2>
 
-                        <p className="text-zinc-400 mt-2">
+                        <p className="mt-2 text-zinc-600 dark:text-zinc-400">
                             Follow this plan to prepare systematically.
                         </p>
 
@@ -917,7 +888,7 @@ const InterviewStrategy = () => {
                                     className={`rounded-2xl border p-6 transition ${
                                         completed
                                             ? "border-emerald-500/20 bg-emerald-500/5"
-                                            : "border-white/10 bg-white/[0.03]"
+                                            : "border-zinc-200 bg-white dark:border-white/10 dark:bg-[#111113]"
                                     }`}
                                 >
 
@@ -971,7 +942,7 @@ const InterviewStrategy = () => {
 
                                                         <div
                                                             key={index}
-                                                            className="flex items-start gap-3 text-zinc-300"
+                                                            className="flex items-start gap-3 text-zinc-600 dark:text-zinc-300"
                                                         >
 
                                                             <CheckCircle2
@@ -1003,8 +974,7 @@ const InterviewStrategy = () => {
                     </div>
 
                 </section>
-
-                        )}
+            )}
 
                         {showPdfPreview && (
                 <div className="
@@ -1019,10 +989,12 @@ const InterviewStrategy = () => {
                         w-full
                         max-w-5xl
                         h-[90vh]
-                        bg-zinc-900
+                        bg-white
                         rounded-2xl
                         overflow-hidden
-                        border border-white/10
+                        border border-zinc-200
+                        dark:bg-zinc-900
+                        dark:border-white/10
                     ">
 
                         <button
@@ -1051,139 +1023,9 @@ const InterviewStrategy = () => {
             )}
         </main>
 
-    </div>
+    </PageShell>
   );
 };
-
-
-/* ---------------- COMPONENTS ---------------- */
-
-const Priority = ({ number, title, description }) => (
-  <div className="priority">
-
-    <div className="priority-number">
-      {number}
-    </div>
-
-    <div>
-      <h4>{title}</h4>
-      <p>{description}</p>
-    </div>
-
-  </div>
-);
-
-
-const Snapshot = ({ icon, label, value }) => (
-  <div className="snapshot">
-
-    <div className="snapshot-left">
-      {icon}
-      {label}
-    </div>
-
-    <strong>{value}</strong>
-
-  </div>
-);
-
-
-const Severity = ({ severity }) => (
-  <span className={`severity ${severity}`}>
-    {severity}
-  </span>
-);
-
-
-const QuestionGroup = ({
-  title,
-  icon,
-  questions,
-  openQuestion,
-  toggleQuestion,
-  offset,
-}) => (
-  <div className="question-group">
-
-    <div className="question-group-header">
-      {icon}
-      <h2>{title}</h2>
-    </div>
-
-    {questions.map((item, index) => {
-
-      const id = index + offset;
-      const isOpen = openQuestion === id;
-
-      return (
-        <div className="question-card" key={id}>
-
-          <button
-            className="question-button"
-            onClick={() => toggleQuestion(id)}
-          >
-
-            <div className="question-title">
-
-              <span className="question-number">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-
-              <span>{item.question}</span>
-
-            </div>
-
-            {isOpen ? (
-              <X size={17} />
-            ) : (
-              <ChevronDown size={17} />
-            )}
-
-          </button>
-
-          {isOpen && (
-            <div className="question-answer">
-
-              <div className="answer-block intention">
-
-                <strong>INTERVIEWER INTENTION</strong>
-
-                <p>{item.intention}</p>
-
-              </div>
-
-              <div className="answer-block">
-
-                <strong>HOW TO ANSWER</strong>
-
-                <p>{item.answer}</p>
-
-              </div>
-
-            </div>
-          )}
-
-        </div>
-      );
-    })}
-
-  </div>
-);
-
-
-const BuildingIcon = () => (
-  <div
-    style={{
-      width: 17,
-      height: 17,
-      display: "grid",
-      placeItems: "center",
-      fontSize: 14,
-    }}
-  >
-    🏢
-  </div>
-);
 
 
 export default InterviewStrategy;

@@ -129,7 +129,7 @@ const Reports = () => {
             await handleDeleteReport(deleteReportId);
             setDeleteReportId(null);
         } catch (error) {
-            console.error("Failed to delete report:", error);
+            // Delete failed - user can retry
         } finally {
             setDeleting(false);
         }

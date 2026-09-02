@@ -12,13 +12,10 @@ export const useAuth=()=>{
         try {
             const data = await login({ email, password });
 
-            console.log("Login response:", data);
-
             setUser(data.data);
 
             return true;
         } catch (error) {
-            console.log("Login error:", error);
             throw error
         } finally {
             setLoading(false);

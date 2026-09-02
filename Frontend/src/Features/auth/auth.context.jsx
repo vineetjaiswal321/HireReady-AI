@@ -1,52 +1,40 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useEffect, useState } from "react";
 import { getMe, logout as logoutApi } from "./services/auth.api";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-    const getAndSetUser = async () => {
-        try {
-            const data = await getMe();
+        const getAndSetUser = async () => {
+            try {
+                const data = await getMe();
 
-            if (data) {
-                setUser(data.data);
-            } else {
+                if (data) {
+                    setUser(data.data);
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
                 setUser(null);
+            } finally {
+                setLoading(false);
             }
+        };
 
-        } catch (error) {
-            setUser(null);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    getAndSetUser();
+        getAndSetUser();
     }, []);
 
-
-    // Logout
     const logout = async () => {
-
         try {
-
             await logoutApi();
-
-            // Clear user from frontend
             setUser(null);
-
         } catch (error) {
-
-            console.error("Logout error:", error);
-
+            // Silently handle logout errors
         }
     };
-
 
     return (
         <AuthContext.Provider
@@ -55,7 +43,7 @@ export const AuthProvider = ({ children }) => {
                 setUser,
                 loading,
                 setLoading,
-                logout
+                logout,
             }}
         >
             {children}

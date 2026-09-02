@@ -116,12 +116,6 @@ export const evaluateMockAnswer = async ({
     answer
 }) => {
 
-    console.log("API EVALUATE PAYLOAD:", {
-        mockInterviewId,
-        question,
-        answer
-    });
-
     const response = await api.post(
         "/api/interview/mock/evaluate",
         {

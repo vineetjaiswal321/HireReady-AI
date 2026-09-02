@@ -14,7 +14,6 @@ export async function updateProfile(profileData){
         
         return respone.data
     } catch (error) {
-        console.log(error)
         throw error
     }
 }

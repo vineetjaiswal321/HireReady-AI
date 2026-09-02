@@ -13,13 +13,10 @@ import {
 import { InterviewContext } from "../interview/interview.context.jsx";
 
 export const useInterview = () => {
-
     const context = useContext(InterviewContext);
 
     if (!context) {
-        throw new Error(
-            "useInterview must be within an InterviewProvider"
-        );
+        throw new Error("useInterview must be within an InterviewProvider");
     }
 
     const {
@@ -31,7 +28,6 @@ export const useInterview = () => {
         setReports
     } = context;
 
-
     // Generate report
     const generateReport = async ({
         jobDescription,
@@ -40,11 +36,9 @@ export const useInterview = () => {
         experienceLevel,
         interviewType
     }) => {
-
         setLoading(true);
 
         try {
-
             const response = await generateInterviewReport({
                 jobDescription,
                 selfDescription,
@@ -58,104 +52,69 @@ export const useInterview = () => {
             setReport(interviewReport);
 
             return interviewReport;
-
         } catch (error) {
-
-            console.error("Generate report error:", error);
-
             throw error;
-
         } finally {
-
             setLoading(false);
-
         }
     };
 
-
     // Get report by ID
     const getReportById = async (interviewId) => {
-
         setLoading(true);
 
         try {
-
             const response = await getInterviewReportById(interviewId);
 
             setReport(response.data);
 
             return response.data;
-
         } catch (error) {
-
-            console.error("Get report error:", error);
-
             throw error;
-
         } finally {
-
             setLoading(false);
-
         }
     };
 
-
     // Get all reports
     const getAllReports = async () => {
-
         setLoading(true);
 
         try {
-
             const response = await getAllInterviewReports();
-
-            console.log("ALL REPORTS RESPONSE:", response);
 
             const interviewReports = response?.data ?? [];
 
             setReports(interviewReports);
 
             return interviewReports;
-
         } catch (error) {
-
-            console.error("Get all reports error:", error);
-
             throw error;
-
         } finally {
-
             setLoading(false);
-
         }
     };
 
-    const handleDeleteReport=async (reportId)=>{
+    const handleDeleteReport = async (reportId) => {
         try {
             await deleteReport(reportId);
-            setReports((prev)=>
-            prev.filter(
-                (report)=>report._id !== reportId
-            ));
-
+            setReports((prev) =>
+                prev.filter((report) => report._id !== reportId)
+            );
         } catch (error) {
-            console.log(error)
-            throw error
+            throw error;
         }
-    }
+    };
 
     // Download Resume PDF
     const generateResume = async (interviewReportId) => {
         setLoading(true);
 
         try {
-
-            const response = await generateResumePDF(
-                interviewReportId
-            );
+            const response = await generateResumePDF(interviewReportId);
 
             // Update current report with PDF information
-            setReport(prev => ({
+            setReport((prev) => ({
                 ...prev,
                 pdf: {
                     url: response.pdfUrl,
@@ -164,61 +123,32 @@ export const useInterview = () => {
             }));
 
             return response;
-
         } catch (error) {
-
-            console.error(
-                "Resume PDF generation error:",
-                error
-            );
-
             throw error;
-
         } finally {
-
             setLoading(false);
-
         }
     };
-
 
     const downloadResume = async (interviewReportId, pdfUrl) => {
         try {
-
-            await downloadResumePDF(
-                pdfUrl,
-                interviewReportId
-            );
-
+            await downloadResumePDF(pdfUrl, interviewReportId);
         } catch (error) {
-
-            console.error(
-                "Resume PDF download error:",
-                error
-            );
-
             throw error;
         }
     };
 
-
     // Load all reports
     useEffect(() => {
-
         getAllReports();
-
     }, []);
-
-
 
     const evaluateAnswer = async ({
         mockInterviewId,
         question,
         answer
     }) => {
-
         try {
-
             setLoading(true);
 
             const response = await evaluateMockAnswer({
@@ -228,22 +158,12 @@ export const useInterview = () => {
             });
 
             return response;
-
         } catch (error) {
-
-            console.error(
-                "Answer evaluation error:",
-                error
-            );
-
             throw error;
-
         } finally {
-
             setLoading(false);
         }
     };
-
 
     return {
         loading,

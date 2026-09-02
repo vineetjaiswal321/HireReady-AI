@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useInterview } from "../../hooks/useInterview.hooks.js";
-import AppNavbar from "../../layout/AppNavbar.jsx";
+import PageShell from "../../layout/PageShell.jsx";
 
 
 const Home = () => {
@@ -172,8 +172,6 @@ const Home = () => {
 
             navigate(`/interview/${report._id}`);
         } catch (error) {
-            console.error("Failed to generate interview report:", error);
-
             setError(
                 error?.response?.data?.message ||
                     error?.message ||
@@ -183,21 +181,7 @@ const Home = () => {
     };
 
     return (
-        <div className="relative min-h-screen overflow-x-hidden bg-[#F7F7F8] text-zinc-950 antialiased dark:bg-[#09090B] dark:text-zinc-50">
-            <div className="pointer-events-none fixed inset-0">
-                <div className="absolute left-1/2 top-[-360px] h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-violet-500/[0.12] blur-[120px] dark:bg-violet-600/[0.16]" />
-                <div
-                    className="absolute inset-0 opacity-[0.45] dark:opacity-[0.18]"
-                    style={{
-                        backgroundImage:
-                            "linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)",
-                        backgroundSize: "64px 64px",
-                        ["--grid"]: "rgba(24,24,27,0.045)",
-                    }}
-                />
-            </div>
-
-            <AppNavbar variant="home" />
+        <PageShell variant="home">
 
             <section className="relative px-6 pb-16 pt-28 md:pt-32">
                 <div className="mx-auto max-w-5xl text-center">
@@ -523,7 +507,7 @@ const Home = () => {
             <HowItWorks />
             <FinalCTA />
             <Footer />
-        </div>
+        </PageShell>
     );
 };
 

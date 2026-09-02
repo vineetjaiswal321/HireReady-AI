@@ -38,7 +38,7 @@ const Settings = () => {
                     setTheme(response.data.theme);
                 }
             } catch (error) {
-                console.error("Failed to fetch settings:", error);
+                // Silently handle fetch errors
             } finally {
                 setLoading(false);
             }
@@ -84,7 +84,7 @@ const Settings = () => {
             await updateSettings({ theme: value });
             setSaved(true);
         } catch (error) {
-            console.error("Failed to update theme:", error);
+            // Silently handle theme update errors
         }
     };
 
@@ -99,7 +99,7 @@ const Settings = () => {
 
             await new Promise((resolve) => setTimeout(resolve, 700));
         } catch (error) {
-            console.error("Failed to update settings:", error);
+            // Silently handle settings update errors
         } finally {
             setSaving(false);
         }

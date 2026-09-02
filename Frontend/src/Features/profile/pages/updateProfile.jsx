@@ -555,7 +555,6 @@ const UpdateProfile = () => {
 
 
         } catch (error) {
-            console.log(error)
             throw error
         } finally{
             setSaving(false)
