@@ -28,3 +28,5 @@ const authUser = asyncHandler(async (req, res, next) => {
         throw new ApiError(401, "Unauthorized Request");
     }
 });
+
+export { authUser }
