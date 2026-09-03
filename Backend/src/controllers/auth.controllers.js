@@ -43,7 +43,11 @@ const registerUserController = asyncHandler(async (req, res)=>{
     )
 
 
-    res.cookie("token", token);
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
     const userResponse= await User.findById(user._id).select("-password");
 
     return res.status(200).json(new ApiResponse(200, userResponse, "User created successfully "))
@@ -74,7 +78,11 @@ const loginUserController= asyncHandler(async (req, res)=>{
         {expiresIn: "1d"}
     )
 
-    res.cookie("token", token);
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
 
     const userResponse= await User.findById(user._id).select("-password");
 
