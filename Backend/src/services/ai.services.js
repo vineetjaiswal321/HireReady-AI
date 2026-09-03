@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
-import puppeteer from "puppeteer"
+import puppeteer from "puppeteer";
+import { PDFDocument } from "pdf-lib"; 
 
 
 const ai = new GoogleGenAI({
@@ -194,29 +195,119 @@ candidate's experience level.
 };
 
 
+/**
+ * A4 @ 96dpi geometry.
+ * IMPORTANT: both the WIDTH and HEIGHT used for on-screen measurement
+ * must reflect the *printable* content box (page size minus margins),
+ * because Chromium's print pipeline reflows text using that narrower
+ * box, not the full page box. Measuring at full page width silently
+ * under-estimates wrapped-text height and is the root cause of the
+ * intermittent "sometimes 2 pages" bug.
+ */
+const MM_TO_PX = 3.7795275591;
+const A4_WIDTH_PX = Math.round(210 * MM_TO_PX);   // 794
+const A4_HEIGHT_PX = Math.round(297 * MM_TO_PX);  // 1123
+const MARGIN_PX = Math.round(14 * MM_TO_PX);      // ~57
+const A4_USABLE_WIDTH = A4_WIDTH_PX - MARGIN_PX * 2;   // ~680
+const A4_USABLE_HEIGHT = A4_HEIGHT_PX - MARGIN_PX * 2; // ~1009 (same value you already had)
+
+const getContentHeight = async (page) => {
+    return await page.evaluate(() => {
+        const body = document.body;
+        const elements = Array.from(body.querySelectorAll("*"));
+        let maxBottom = 0;
+        for (const element of elements) {
+            const rect = element.getBoundingClientRect();
+            if (rect.height > 0) {
+                maxBottom = Math.max(maxBottom, rect.bottom);
+            }
+        }
+        return Math.ceil(maxBottom);
+    });
+};
+
+const getPdfPageCount = async (pdfBuffer) => {
+    const doc = await PDFDocument.load(pdfBuffer);
+    return doc.getPageCount();
+};
+
+const COMPACT_STYLE_LEVEL_1 = `
+    section {
+        margin-top: 8px !important;
+        margin-bottom: 4px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    h1 {
+        margin-top: 0 !important;
+        margin-bottom: 3px !important;
+    }
+
+    h2 {
+        margin-top: 8px !important;
+        margin-bottom: 3px !important;
+    }
+
+    p {
+        margin-top: 2px !important;
+        margin-bottom: 3px !important;
+    }
+
+    ul {
+        margin-top: 2px !important;
+        margin-bottom: 3px !important;
+        padding-left: 18px !important;
+    }
+
+    li {
+        margin-top: 0 !important;
+        margin-bottom: 2px !important;
+    }
+
+    header {
+        margin-bottom: 4px !important;
+    }
+`;
+
+// A second, more aggressive compaction pass used ONLY if level 1 plus
+// the real PDF page-count check still shows overflow. This still never
+// touches font-size, per the "never below 12px" hard rule.
+const COMPACT_STYLE_LEVEL_2 = `
+    section { margin-top: 5px !important; margin-bottom: 2px !important; }
+    h1 { margin-bottom: 2px !important; }
+    h2 { margin-top: 5px !important; margin-bottom: 2px !important; }
+    p { margin-top: 1px !important; margin-bottom: 2px !important; }
+    ul { margin-top: 1px !important; margin-bottom: 2px !important; padding-left: 16px !important; }
+    li { margin-bottom: 1px !important; line-height: 1.25 !important; }
+    header { margin-bottom: 2px !important; }
+`;
+
 const generatePdfFromHtml = async (htmlContent) => {
     const browser = await puppeteer.launch({
-        headless: true
+        headless: true,
     });
 
     try {
         const page = await browser.newPage();
 
-        // Set A4 viewport
+        // FIX: measure at the *usable* content width (page width minus
+        // left+right margins), matching what the print pass will actually
+        // use for text reflow. Using the full page width here was the
+        // root cause of the intermittent 2-page overflow.
         await page.setViewport({
-            width: 794,
-            height: 1123,
-            deviceScaleFactor: 1
+            width: A4_USABLE_WIDTH,
+            height: A4_HEIGHT_PX,
+            deviceScaleFactor: 1,
         });
 
-        // Load generated HTML
         await page.setContent(htmlContent, {
-            waitUntil: "networkidle0"
+            waitUntil: "networkidle0",
         });
 
         await page.emulateMediaType("print");
 
-        // Wait for fonts/images/layout to finish
+        // Wait for fonts and images
         await page.evaluate(async () => {
             if (document.fonts) {
                 await document.fonts.ready;
@@ -226,7 +317,9 @@ const generatePdfFromHtml = async (htmlContent) => {
 
             await Promise.all(
                 images.map((img) => {
-                    if (img.complete) return Promise.resolve();
+                    if (img.complete) {
+                        return Promise.resolve();
+                    }
 
                     return new Promise((resolve) => {
                         img.onload = resolve;
@@ -236,7 +329,6 @@ const generatePdfFromHtml = async (htmlContent) => {
             );
         });
 
-        // Force A4 page styling
         await page.addStyleTag({
             content: `
                 @page {
@@ -244,41 +336,143 @@ const generatePdfFromHtml = async (htmlContent) => {
                     margin: 15mm;
                 }
 
-                html,
-                body {
+                html {
                     margin: 0 !important;
                     padding: 0 !important;
                     width: 100%;
                 }
 
-                * {
+                body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100%;
+                    box-sizing: border-box;
+                    overflow: visible !important;
+                }
+
+                *,
+                *::before,
+                *::after {
                     box-sizing: border-box;
                 }
 
                 section {
-                    page-break-inside: avoid;
                     break-inside: avoid;
+                    page-break-inside: avoid;
                 }
-            `
+
+                a {
+                    color: inherit;
+                    text-decoration: none;
+                    cursor: pointer;
+                }
+            `,
         });
 
-        // Generate PDF
-        const pdfBuffer = await page.pdf({
+        let contentHeight = await getContentHeight(page);
+
+        console.log(
+            `Resume height before fitting (measured at usable width ${A4_USABLE_WIDTH}px): ${contentHeight}px`
+        );
+
+        let compactionLevel = 0;
+
+        /*
+         * If content exceeds one A4 page, progressively compact
+         * spacing before touching font size.
+         *
+         * This preserves readability much better than immediately
+         * scaling the entire document.
+         */
+        if (contentHeight > A4_USABLE_HEIGHT) {
+            await page.addStyleTag({
+                content: COMPACT_STYLE_LEVEL_1,
+            });
+
+            await page.evaluate(() => {
+                document.body.offsetHeight;
+            });
+
+            compactionLevel = 1;
+            contentHeight = await getContentHeight(page);
+
+            console.log(
+                `Resume height after spacing compression (level 1): ${contentHeight}px`
+            );
+        }
+
+        if (contentHeight > A4_USABLE_HEIGHT) {
+            await page.addStyleTag({
+                content: COMPACT_STYLE_LEVEL_2,
+            });
+
+            await page.evaluate(() => {
+                document.body.offsetHeight;
+            });
+
+            compactionLevel = 2;
+            contentHeight = await getContentHeight(page);
+
+            console.log(
+                `Resume height after spacing compression (level 2): ${contentHeight}px`
+            );
+        }
+
+        const pdfOptions = {
             format: "A4",
-
             printBackground: true,
-
             displayHeaderFooter: false,
+            preferCSSPageSize: true,
+        };
 
-            preferCSSPageSize: false,
+        let pdfBuffer = await page.pdf(pdfOptions);
 
-            margin: {
-                top: "15mm",
-                bottom: "15mm",
-                left: "15mm",
-                right: "15mm"
-            }
-        });
+        /*
+         * FIX: don't rely solely on the DOM-height heuristic above (it
+         * can still be off due to font metrics, rounding, etc). Verify
+         * against the ACTUAL rendered PDF page count — this is ground
+         * truth. If it still overflows and we haven't hit max
+         * compaction yet, escalate once more and re-render.
+         */
+        let pageCount = await getPdfPageCount(pdfBuffer);
+
+        console.log(
+            `Rendered PDF page count: ${pageCount} (compaction level ${compactionLevel})`
+        );
+
+        if (pageCount > 1 && compactionLevel < 2) {
+            await page.addStyleTag({
+                content: COMPACT_STYLE_LEVEL_2,
+            });
+
+            await page.evaluate(() => {
+                document.body.offsetHeight;
+            });
+
+            pdfBuffer = await page.pdf(pdfOptions);
+            pageCount = await getPdfPageCount(pdfBuffer);
+
+            console.log(
+                `Rendered PDF page count after escalation: ${pageCount}`
+            );
+        }
+
+        /*
+         * IMPORTANT:
+         * Never hide the second page.
+         *
+         * If the content is still too large after reasonable
+         * compaction, throw an error instead of silently clipping
+         * the resume.
+         */
+        if (pageCount > 1) {
+            throw new Error(
+                `Resume content is too large to fit on one A4 page ` +
+                `(rendered ${pageCount} pages even after maximum spacing ` +
+                `compaction). The source content needs to be shortened ` +
+                `before regenerating.`
+            );
+        }
 
         return pdfBuffer;
 
@@ -286,6 +480,58 @@ const generatePdfFromHtml = async (htmlContent) => {
         await browser.close();
     }
 };
+
+
+/**
+ * FIX: previously this only ever read profile.codingProfiles and only
+ * covered 5 platforms, silently dropping github / linkedin / portfolio /
+ * hackerrank even though the resume prompt's "SUPPORTED PLATFORMS" list
+ * and strict-link rules explicitly cover them. Those links can live in
+ * different places depending on how `profile` is shaped upstream, so
+ * this checks several common locations and prefers the first non-empty
+ * match. Not exported — it's purely an internal helper for
+ * generateResumePDF, same as before.
+ */
+const pickUrl = (...candidates) => {
+    for (const c of candidates) {
+        if (typeof c === "string" && c.trim().length > 0) return c.trim();
+    }
+    return null;
+};
+
+const extractCodingProfileUrls = (profile) => {
+    const codingProfiles = profile?.codingProfiles || {};
+    const social = profile?.socialLinks || profile?.links || {};
+
+    return {
+        leetcode: pickUrl(codingProfiles.leetcode, profile?.leetcode, social.leetcode),
+        geeksforgeeks: pickUrl(
+            codingProfiles.geeksforgeeks,
+            codingProfiles.gfg,
+            profile?.geeksforgeeks,
+            social.geeksforgeeks
+        ),
+        codechef: pickUrl(codingProfiles.codechef, profile?.codechef, social.codechef),
+        codeforces: pickUrl(codingProfiles.codeforces, profile?.codeforces, social.codeforces),
+        codingninjas: pickUrl(
+            codingProfiles.codingninjas,
+            codingProfiles.code360,
+            profile?.codingninjas,
+            social.codingninjas
+        ),
+        hackerrank: pickUrl(codingProfiles.hackerrank, profile?.hackerrank, social.hackerrank),
+        // Previously missing entirely from the "verified" block:
+        github: pickUrl(codingProfiles.github, profile?.github, social.github),
+        linkedin: pickUrl(codingProfiles.linkedin, profile?.linkedin, social.linkedin),
+        portfolio: pickUrl(
+            codingProfiles.portfolio,
+            profile?.portfolio,
+            profile?.website,
+            social.portfolio
+        ),
+    };
+};
+
 
 const generateResumePDF = async ({
     resume,
@@ -299,6 +545,10 @@ const generateResumePDF = async ({
             "Complete HTML document containing the ATS-friendly resume"
         )
     });
+
+    // FIX: now includes github/linkedin/portfolio/hackerrank, pulled
+    // from whichever field in `profile` actually holds them.
+    const codingProfileUrls = extractCodingProfileUrls(profile);
 
 const prompt = `
 You are an expert resume writer and HTML/CSS engineer. Generate a complete, ATS-friendly, ONE-PAGE(Mandatory) resume as a single self-contained HTML document. The VISUAL DESIGN must replicate the exact layout style described below. Content should be tailored to the job description using only facts from the resume/profile — never invented.
@@ -317,15 +567,50 @@ ${jobDescription}
 --- STRUCTURED PROFILE DATA (JSON — authoritative for contact info, links, education, skills) ---
 ${JSON.stringify(profile)}
 
+=== VERIFIED PROFILE URLs (AUTHORITATIVE — use these EXACT values) ===
+
+These URLs are taken DIRECTLY from the user's profile database, across
+ALL known profile fields (coding platforms, GitHub, LinkedIn, portfolio).
+A value of null means the candidate has NO verified profile for that
+platform.
+
+${JSON.stringify(codingProfileUrls, null, 2)}
+
+STRICT RULE:
+
+When a coding platform is mentioned anywhere in the resume, use the
+corresponding URL from VERIFIED PROFILE URLs.
+
+NEVER replace these URLs with the platform homepage.
+
+For example, if:
+
+leetcode = "https://leetcode.com/vineetjaiswal321"
+
+then:
+
+<a href="https://leetcode.com/vineetjaiswal321">LeetCode</a>
+
+NOT:
+
+<a href="https://leetcode.com/">LeetCode</a>
+
+The href must be the exact value from VERIFIED PROFILE URLs.
+
+If a platform's value above is null, do NOT create a link for it —
+render the platform name as plain text only, and do NOT invent a URL
+or username for it.
+
 === EXACT VISUAL DESIGN SPEC ===
 
 1. HEADER
    - Full name, centered, ALL CAPS, bold, 24-26px, slight letter-spacing.
-   - Directly below: one centered line — phone | email | LinkedIn | GitHub | location — separated by " | ". Each that exists as a real link renders as a clickable <a>; otherwise plain text. 10.5-11px, not bold.
+   - Directly below: one centered line — phone | email | LinkedIn | GitHub | location
+    - 11px minimum, 12px preferred.
    - Thin horizontal rule (1px, dark gray/black) directly under this line, full width.
 
 2. SECTION HEADERS
-   - ALL CAPS, bold, 14-15px, single consistent accent color (e.g. #1a3d5c) for every header.
+   - ALL CAPS, bold, 15px, single consistent accent color (e.g. #1a3d5c) for every header.
    - Thin bottom border (1px solid) under each header, full content width.
    - Order: PROFESSIONAL SUMMARY → EDUCATION → TECHNICAL SKILLS → PROJECTS → ACHIEVEMENTS → CERTIFICATIONS. Skip sections with no content — no placeholders.
    - Slightly more space above each header than below it, matching a dense single-page CV rhythm.
@@ -346,6 +631,15 @@ ${JSON.stringify(profile)}
 
 6. ACHIEVEMENTS / CERTIFICATIONS
    - Simple bullet (•) list, one line per item where possible.
+   - If an achievement mentions a coding platform such as LeetCode, CodeChef,
+     HackerRank, GeeksforGeeks, Codeforces, etc., and the candidate's profile
+     URL is available, make the platform name itself a clickable HTML link.
+   - Example:
+     • Solved 300+ problems on !important <a href="https://leetcode.com/username">LeetCode</a>
+   - Do NOT render "LeetCode" or any other coding platform as plain text when
+     its profile URL is available.
+   - Do NOT display the raw URL.
+   - Use the exact profile URL provided in the candidate's data codingProfiles object.
 
 7. GLOBAL STYLING
    - Font: clean system sans-serif stack ("Arial, Helvetica, sans-serif") only — no external/Google fonts (network calls fail during PDF render).
@@ -354,30 +648,136 @@ ${JSON.stringify(profile)}
    - No icons, no images, no tables-for-layout — semantic HTML only (<header>, <section>, <h1>, <h2>, <ul><li>, <a>, flex rows for right-aligned date/location pattern).
 
 === FONT SIZE RULES (STRICT) ===
-- Body text (bullets, skills lines, project descriptions): 11.5px minimum, 12px preferred. NEVER below 11px.
-- Name: 24-28px bold.
-- Section headers: 18-19px bold uppercase.
-- Contact/links line: 13.5-14px minimum.
-- "Tech:" lines and project tags/dates: 12.5px minimum.
-- Line-height for body text: 1.4-1.45 minimum (never tighter than 1.3 even when compressing).
-- Define sizes in a way that keeps them consistent (e.g. body { font-size: 13.5px; } with headers/name sized relative to it) — do not let bullet text silently shrink smaller than everything else.
+- Body text: 14.5px minimum, 15px preferred. NEVER below 13px.
+- Name: 26-28.5px bold.
+- Section headers: 18px bold uppercase.
+- Contact/links line: 13-14px.
+- Tech lines and project tags/dates: 13.5-14.5px.
+- Line-height: 1.3-1.4.
 
-=== FITTING ON ONE PAGE — PRIORITY ORDER ===
-If content overflows one A4 page, fix it IN THIS ORDER — do not skip ahead:
-1. Reduce vertical margin/padding between sections (14px → 10px → 8px).
-2. Reduce line-height slightly (1.45 → 1.35, never below 1.3).
-3. Tighten spacing between bullet <li> items.
-4. Trim to the most relevant/impactful bullets per project (max 3-4 per project) rather than keeping everything.
-5. ONLY as an absolute last resort, reduce body font by half a point (11.5px → 11px). Never below 11px.
-Font size is NEVER sacrificed to fit more content. Fewer, sharper bullets at readable size beats a cramped tiny-font resume.
+=== STRICT ONE-PAGE REQUIREMENT ===
 
-=== LINKS RULE ===
-- Scan resume text + profile JSON for: GitHub, LinkedIn, LeetCode, GeeksforGeeks/GFG, HackerRank, Codeforces, portfolio site, email, phone.
-- Every link that genuinely exists becomes a real <a href="FULL_URL" target="_blank" rel="noopener">Label</a>. Email → mailto:, phone → tel:.
-- If only a handle exists (no full URL), construct the standard profile URL ONLY if the platform is unambiguous (github.com/username, linkedin.com/in/username, leetcode.com/username, geeksforgeeks.org/user/username). Otherwise leave as plain text.
-- NEVER fabricate a link with no basis in source data.
-- All links use the single accent color, no underline.
-- Add link of leetcode profile, gfg profile, coding ninjas profile, codeforces profile, hackerrank profile, portfolio site if they exist in the resume/profile data.(Mandatory) 
+The final resume MUST fit completely on exactly ONE A4 page.
+
+This is a hard requirement, not a preference.
+
+The generated HTML must be designed specifically for:
+A4 paper with 13mm margins on all sides. Because print reflow narrows
+the usable text width to roughly 180mm (about 680px at 96dpi), keep
+paragraph and bullet line lengths reasonably tight — avoid long
+unbroken sentences that assume a wider column than that.
+
+IMPORTANT:
+- NEVER generate content that intentionally overflows onto page 2.
+- NEVER create a second page.
+- Keep all resume sections on the same single page.
+- If the source contains too much content, intelligently remove the least relevant content.
+- Prioritize content in this order:
+  1. Professional Summary
+  2. Education
+  3. Technical Skills
+  4. Most relevant Projects
+  5. Achievements
+  6. Certifications
+- Select only the strongest and most job-relevant content.
+- Maximum 3 projects.
+- Maximum 3 bullets per project.
+- Maximum 1 concise line per achievement where possible.
+- Maximum 1 concise line per certification where possible.
+- Professional Summary must be 2 concise sentences.
+- Do NOT remove important facts merely to save space, but remove redundancy.
+- NEVER reduce body font below 12px.
+- Prefer shortening/rephrasing verbose descriptions over shrinking fonts.
+- Use compact section spacing while maintaining readability.
+
+Before returning the HTML, mentally verify that the complete document fits inside one A4 page.
+
+=== CODING PROFILE LINKS — STRICT ===
+
+Coding profile URLs MUST come from the VERIFIED PROFILE URLs block above
+whenever it contains a URL for that platform.
+
+The VERIFIED PROFILE URLs block is the authoritative source for coding
+profile URLs.
+
+SUPPORTED PLATFORMS:
+- LeetCode
+- GeeksforGeeks / GFG
+- CodeChef
+- Codeforces
+- HackerRank
+- Coding Ninjas / Code360
+- GitHub
+- LinkedIn
+- Portfolio
+
+STRICT RULES:
+
+1. FIRST check VERIFIED PROFILE URLs.
+
+2. If a URL exists there, use that EXACT URL.
+
+3. NEVER construct a different URL when an exact URL is available.
+
+4. NEVER use these generic URLs when a user's actual URL exists:
+   https://leetcode.com/
+   https://github.com/
+   https://codechef.com/
+   https://www.hackerrank.com/
+   https://www.geeksforgeeks.org/
+   https://codeforces.com/
+
+5. Only construct a profile URL from a username/handle when the profile JSON
+   contains a username/handle but does NOT contain a full URL.
+
+6. If both a username and full URL exist, ALWAYS prefer the full URL. !important
+
+7. The visible platform name MUST be wrapped in a real HTML <a> element.
+
+8. This rule applies EVERYWHERE the platform is mentioned, including:
+   - Header/contact section
+   - Achievements
+   - Certifications
+   - Projects
+   - Experience
+   - Any other resume section
+
+9. The href MUST point directly to the user's profile, NOT the platform
+   homepage.
+
+10. NEVER invent a username, profile URL, or profile.
+
+11. If a platform's value in VERIFIED PROFILE URLs is null, do NOT link
+    it — render the platform name as plain text only.
+
+!important
+EXAMPLE:
+
+If VERIFIED PROFILE URLs contains:
+
+"leetcode": "https://leetcode.com/vineetjaiswal321"
+
+then generate:
+
+<a href="https://leetcode.com/vineetjaiswal321">LeetCode</a>
+
+NOT:
+
+<a href="https://leetcode.com/">LeetCode</a>
+
+If the achievement says:
+
+Solved 300+ problems on LeetCode
+
+generate:
+
+<li>
+  Solved 300+ problems on
+  <a href="https://leetcode.com/vineetjaiswal321">LeetCode</a>
+</li>
+
+The href must ALWAYS be the candidate's actual profile URL from the
+VERIFIED PROFILE URLs block whenever one is available.
 
 === CONTENT RULES ===
 1. Never invent employers, dates, metrics, or skills. Rephrase/reorder existing content only to match the job description.
@@ -386,11 +786,11 @@ Font size is NEVER sacrificed to fit more content. Fewer, sharper bullets at rea
 4. Weave in exact job-description keywords only where truthfully supported by source data.
 5. Quantify bullets only where source data already has numbers — never add new ones.
 6. Shrink or remove bullets only if necessary to fit on one page, but never invent new content.(Necessory to fit on one page, but never invent new content.)
-7. Can reduce margin/padding between sections, line-height, and bullet spacing to fit on one page, but never reduce font size below 11px.(Mandatory)
+7. Can reduce margin/padding between sections, line-height, and bullet spacing to fit on one page, but never reduce font size below 13px.(Mandatory)
 
 === HTML/CSS OUTPUT RULES (Puppeteer PDF constraints) ===
 1. Return ONE complete HTML document: <!DOCTYPE html>, <html>, <head> with a single inline <style> block. No external stylesheets/fonts.
-2. Do NOT add margin/padding to <html> or <body> — the PDF renderer already applies 15mm margins on all sides.
+2. Do NOT add margin/padding to <html> or <body> — the PDF renderer already applies 13mm margins on all sides.
 3. Add "page-break-inside: avoid;" on each <section>.
 4. Text must remain real, selectable HTML text (not images) for ATS parsing.
 
@@ -408,10 +808,47 @@ Return ONLY JSON matching the provided schema — the "html" field contains the 
 
     const jsonContent = JSON.parse(response.text);
 
+    console.log(
+    "PROFILE DATA SENT TO AI:",
+    JSON.stringify(profile, null, 2)
+);
+
+console.log(
+    "VERIFIED PROFILE URLs SENT TO AI:",
+    JSON.stringify(codingProfileUrls, null, 2)
+);
+
+console.log(
+    "GENERATED LEETCODE LINKS:",
+    (jsonContent.html.match(
+        /<a\b[^>]*href=["'][^"']*leetcode[^"']*["'][^>]*>.*?<\/a>/gi
+    ) || [])
+);
+
     if (!jsonContent.html) {
         throw new Error(
             "AI failed to generate resume HTML"
         );
+    }
+
+    console.log("Generated profile links:");
+
+    const links = jsonContent.html.match(
+        /<a\b[^>]*href=["'][^"']+["'][^>]*>.*?<\/a>/gi
+    );
+
+    console.log(links);
+
+    // Sanity check: warn (don't fail) if a verified, non-null URL never
+    // made it into the generated HTML at all — helps catch prompt-
+    // adherence regressions early, e.g. GitHub/LinkedIn getting dropped.
+    for (const [platform, url] of Object.entries(codingProfileUrls)) {
+        if (url && !jsonContent.html.includes(url)) {
+            console.warn(
+                `WARNING: verified ${platform} URL (${url}) was not found ` +
+                `anywhere in the generated resume HTML.`
+            );
+        }
     }
 
     const pdfBuffer=await generatePdfFromHtml(jsonContent.html)
