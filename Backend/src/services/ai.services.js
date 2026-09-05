@@ -177,7 +177,7 @@ candidate's experience level.
 `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash-lite",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
