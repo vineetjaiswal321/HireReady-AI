@@ -17,12 +17,13 @@ import authRouter from "./routes/auth.routes.js";
 import interviewRouter from "./routes/interview.rotes.js";
 import profileRouter from "./routes/profile.routes.js";
 import settingsRouter from "./routes/settings.routes.js";
+import mentorRouter from "./routes/mentor.routes.js";
 
 
 app.use("/api/auth", authRouter)
 app.use("/api/interview", interviewRouter)
 app.use("/api/users/", profileRouter)
 app.use("/api/v1/settings", settingsRouter)
-
+app.use("/api/mentor", mentorRouter)
 
 export default app;

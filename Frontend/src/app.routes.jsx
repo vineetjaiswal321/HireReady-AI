@@ -14,6 +14,7 @@ import MockInterviewReports from "./Features/interview/pages/mockInterviewReport
 import ForgotPassword from "./Features/auth/pages/forgotPassword.jsx"
 import ResetPassword from "./Features/auth/pages/resetPassword.jsx"
 import ChangePassword from "./Features/auth/pages/changePassword.jsx"
+import CareerMentor from "./Features/chatbot/pages/careerMentor.jsx"
 
 
 export const router=createBrowserRouter([
@@ -112,5 +113,13 @@ export const router=createBrowserRouter([
                 <ChangePassword/>
             </Protected>
         )
-    }
+    },
+    {
+        path: "/chat",
+        element: (
+            <Protected>
+                <CareerMentor/>
+            </Protected>
+        )
+    },
 ])

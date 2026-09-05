@@ -808,22 +808,7 @@ Return ONLY JSON matching the provided schema — the "html" field contains the 
 
     const jsonContent = JSON.parse(response.text);
 
-    console.log(
-    "PROFILE DATA SENT TO AI:",
-    JSON.stringify(profile, null, 2)
-);
 
-console.log(
-    "VERIFIED PROFILE URLs SENT TO AI:",
-    JSON.stringify(codingProfileUrls, null, 2)
-);
-
-console.log(
-    "GENERATED LEETCODE LINKS:",
-    (jsonContent.html.match(
-        /<a\b[^>]*href=["'][^"']*leetcode[^"']*["'][^>]*>.*?<\/a>/gi
-    ) || [])
-);
 
     if (!jsonContent.html) {
         throw new Error(
@@ -831,13 +816,11 @@ console.log(
         );
     }
 
-    console.log("Generated profile links:");
 
     const links = jsonContent.html.match(
         /<a\b[^>]*href=["'][^"']+["'][^>]*>.*?<\/a>/gi
     );
 
-    console.log(links);
 
     // Sanity check: warn (don't fail) if a verified, non-null URL never
     // made it into the generated HTML at all — helps catch prompt-
